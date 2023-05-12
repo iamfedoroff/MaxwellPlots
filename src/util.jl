@@ -8,7 +8,7 @@ function space_units_string(xu)
         sxu = "mm"
     elseif xu == 1e-6
         sxu = "um"
-    elseif sxu == 1e-9
+    elseif xu == 1e-9
         sxu = "nm"
     end
     return sxu
