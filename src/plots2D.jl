@@ -221,14 +221,8 @@ function plot2D_poynting_averaged(
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "t")
-    Hy = HDF5.read(fp, "Hy")
-    Ex = HDF5.read(fp, "Ex")
-    Ez = HDF5.read(fp, "Ez")
+    F = HDF5.read(fp, "Sa")
     HDF5.close(fp)
-
-    F = @. sqrt((-Ez*Hy)^2 + (Ex*Hy)^2)
-    F = dropdims(sum(F; dims=3); dims=3) ./ length(t)
 
     @. x = x / xu
     @. z = z / zu

@@ -321,17 +321,8 @@ function plot3D_poynting_averaged(
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "t")
-    Hx = HDF5.read(fp, "Hx")
-    Hy = HDF5.read(fp, "Hy")
-    Hz = HDF5.read(fp, "Hz")
-    Ex = HDF5.read(fp, "Ex")
-    Ey = HDF5.read(fp, "Ey")
-    Ez = HDF5.read(fp, "Ez")
+    F = HDF5.read(fp, "Sa")
     HDF5.close(fp)
-
-    F = @. sqrt((Ey*Hz - Ez*Hy)^2 + (Ez*Hx - Ex*Hz)^2 + (Ex*Hy - Ey*Hx)^2)
-    F = dropdims(sum(F; dims=4); dims=4) ./ length(t)
 
     @show extrema(F)
     if norm
@@ -374,17 +365,10 @@ function plot3D_poynting_averaged_xsec(
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "t")
-    Hx = HDF5.read(fp, "Hx")
-    Hy = HDF5.read(fp, "Hy")
-    Hz = HDF5.read(fp, "Hz")
-    Ex = HDF5.read(fp, "Ex")
-    Ey = HDF5.read(fp, "Ey")
-    Ez = HDF5.read(fp, "Ez")
+    Sa = HDF5.read(fp, "Sa")
     HDF5.close(fp)
 
-    F = @. sqrt((Ey*Hz - Ez*Hy)^2 + (Ez*Hx - Ex*Hz)^2 + (Ex*Hy - Ey*Hx)^2)
-    F = dropdims(sum(F; dims=4); dims=4) ./ length(t)
+    F = Sa
 
     @. x = x / xu
     @. y = y / yu
@@ -401,7 +385,7 @@ function plot3D_poynting_averaged_xsec(
     if norm
         if isnothing(norm_point)
             F .= F ./ maximum(F)
-        else 
+        else
             xn, yn, zn = norm_point
             ixn = argmin(abs.(x .- xn))
             iyn = argmin(abs.(y .- yn))
