@@ -367,8 +367,8 @@ end
 
 
 function plot3D_poynting_averaged_xsec(
-    fname; xu=1, yu=1, zu=1, vmin=0, vmax=1, norm=false,
-    cmap=mak.Reverse(:Hiroshige), new_window=false,
+    fname, x0, y0, z0; xu=1, yu=1, zu=1, vmin=0, vmax=1, norm=false, norm_point=nothing,
+    aspect=(1,1,1), cmap=mak.Reverse(:Hiroshige), new_window=false, save=false,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
@@ -386,11 +386,6 @@ function plot3D_poynting_averaged_xsec(
     F = @. sqrt((Ey*Hz - Ez*Hy)^2 + (Ez*Hx - Ex*Hz)^2 + (Ex*Hy - Ey*Hx)^2)
     F = dropdims(sum(F; dims=4); dims=4) ./ length(t)
 
-    @show extrema(F)
-    if norm
-        F .= F ./ maximum(F)
-    end
-
     @. x = x / xu
     @. y = y / yu
     @. z = z / zu
@@ -398,23 +393,44 @@ function plot3D_poynting_averaged_xsec(
     syu = space_units_string(yu)
     szu = space_units_string(zu)
 
-    ix, iy, iz = (div(length(p),2) for p in (x,y,z))
+    ix0 = argmin(abs.(x .- x0))
+    iy0 = argmin(abs.(y .- y0))
+    iz0 = argmin(abs.(z .- z0))
+
+    @show extrema(F)
+    if norm
+        if isnothing(norm_point)
+            F .= F ./ maximum(F)
+        else 
+            xn, yn, zn = norm_point
+            ixn = argmin(abs.(x .- xn))
+            iyn = argmin(abs.(y .- yn))
+            izn = argmin(abs.(z .- zn))
+            @views F .= F ./ maximum(F[ixn,iyn,izn,:])
+        end
+    end
 
     fig = mak.Figure(resolution=(1600,600), fontsize=14)
     if new_window
         mak.display(mak.Screen(), fig)
     end
-    ax1 = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="y ($syu)")
-    ax2 = mak.Axis(fig[1,2]; xlabel="x ($sxu)", ylabel="z ($szu)")
-    ax3 = mak.Axis(fig[1,3]; xlabel="y ($syu)", ylabel="z ($szu)")
+    ax1 = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="y ($syu)", aspect=aspect[1])
+    ax2 = mak.Axis(fig[1,2]; xlabel="x ($sxu)", ylabel="z ($szu)", aspect=aspect[2])
+    ax3 = mak.Axis(fig[1,3]; xlabel="y ($syu)", ylabel="z ($szu)", aspect=aspect[3])
     mak.display(fig)
 
     colormap = cmap
     colorrange = (vmin,vmax)
 
-    hm1 = mak.heatmap!(ax1, x, y, F[:,:,iz]; colormap, colorrange)
-    hm2 = mak.heatmap!(ax2, x, z, F[:,iy,:]; colormap, colorrange)
-    hm3 = mak.heatmap!(ax3, y, z, F[ix,:,:]; colormap, colorrange)
+    hm1 = mak.heatmap!(ax1, x, y, F[:,:,iz0]; colormap, colorrange)
+    hm2 = mak.heatmap!(ax2, x, z, F[:,iy0,:]; colormap, colorrange)
+    hm3 = mak.heatmap!(ax3, y, z, F[ix0,:,:]; colormap, colorrange)
     mak.Colorbar(fig[2,3], hm1; label="Time averaged |S|", vertical=false, flipaxis=false)
+
+    if save
+        ext = splitext(fname)[end]
+        fname_fig = replace(fname, ext => ".png")
+        mak.save(fname_fig, fig)
+    end
     return nothing
 end

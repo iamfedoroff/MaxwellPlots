@@ -213,7 +213,7 @@ end
 
 
 function plot2D_poynting_averaged(
-    fname; xu=1, zu=1, vmin=0, vmax=1, norm=false, aspect=1,
+    fname; xu=1, zu=1, vmin=0, vmax=1, norm=false, norm_point=nothing, aspect=1,
     xlims=(nothing,nothing), zlims=(nothing,nothing),
     cmap=mak.Reverse(:Hiroshige),
     new_window=false, save=false,
@@ -230,15 +230,22 @@ function plot2D_poynting_averaged(
     F = @. sqrt((-Ez*Hy)^2 + (Ex*Hy)^2)
     F = dropdims(sum(F; dims=3); dims=3) ./ length(t)
 
-    @show extrema(F)
-    if norm
-        F .= F ./ maximum(F)
-    end
-
     @. x = x / xu
     @. z = z / zu
     sxu = space_units_string(xu)
     szu = space_units_string(zu)
+
+    @show extrema(F)
+    if norm
+        if isnothing(norm_point)
+            F .= F ./ maximum(F)
+        else
+            xn, zn = norm_point
+            ixn = argmin(abs.(x .- xn))
+            izn = argmin(abs.(z .- zn))
+            @views F .= F ./ maximum(F[ixn,izn,:])
+        end
+    end
 
     isnothing(xlims[1]) ? xmin=x[1] : xmin=xlims[1]
     isnothing(xlims[2]) ? xmax=x[end] : xmax=xlims[2]
