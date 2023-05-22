@@ -1,6 +1,6 @@
 function plot1D(
     fname, svar;
-    zu=1, tu=1, vmin=-1, vmax=1, norm=false, cmap=:seismic, new_window=false,
+    zu=1, tu=1, vmin=-1, vmax=1, norm=false, cmap=:seismic, new_window=false, save=false,
 )
     fp = HDF5.h5open(fname, "r")
     z = HDF5.read(fp, "z")
@@ -29,6 +29,12 @@ function plot1D(
         ax, t, z, transpose(F); colormap=cmap, colorrange=(vmin,vmax),
     )
     mak.Colorbar(fig[2,1], hm; vertical=false, label=svar, flipaxis=false)
+
+    if save
+        ext = splitext(fname)[end]
+        fname_fig = replace(fname, ext => ".png")
+        mak.save(fname_fig, fig)
+    end
     return nothing
 end
 
