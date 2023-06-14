@@ -123,3 +123,11 @@ function plot_waveform(model; tu=1)
     mak.display(fig)
     return nothing
 end
+
+
+# https://discourse.julialang.org/t/makie-figure-resolution-makie-primary-resolution-deprecated/93854/4
+function primary_resolution()
+    monitor = mak.GLFW.GetPrimaryMonitor()
+    videomode = mak.MonitorProperties(monitor).videomode
+    return (videomode.width, videomode.height)
+end
