@@ -14,10 +14,13 @@ function inspect3D(
 
     @show extrema(F)
 
+    ext = splitext(fname)[end]
+    movie_fname = replace(fname, ext => ".mp4")
+
     inspect(
         x, y, z, t, F;
         xu, yu, zu, tu, norm, vmin, vmax, aspect, xlims, ylims, zlims, cmap, new_window,
-        movie,
+        movie, movie_fname,
     )
     return nothing
 end
@@ -39,10 +42,13 @@ function inspect3D_xsec(
 
     @show extrema(F)
 
+    ext = splitext(fname)[end]
+    movie_fname = replace(fname, ext => ".mp4")
+
     inspect_xsec(
         x, y, z, t, F, x0, y0, z0;
         xu, yu, zu, tu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-        new_window, movie,
+        new_window, movie, movie_fname,
     )
     return nothing
 end
@@ -71,10 +77,13 @@ function inspect3D_poynting(
 
     @show extrema(F)
 
+    ext = splitext(fname)[end]
+    movie_fname = replace(fname, ext => ".mp4")
+
     inspect(
         x, y, z, t, F;
         xu, yu, zu, tu, norm, vmin, vmax, aspect, xlims, ylims, zlims, cmap, new_window,
-        movie,
+        movie, movie_fname
     )
     return nothing
 end
@@ -103,10 +112,13 @@ function inspect3D_poynting_xsec(
 
     @show extrema(F)
 
+    ext = splitext(fname)[end]
+    movie_fname = replace(fname, ext => ".mp4")
+
     inspect_xsec(
         x, y, z, t, F, x0, y0, z0;
         xu, yu, zu, tu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-        new_window, movie,
+        new_window, movie, movie_fname,
     )
     return nothing
 end

@@ -1,6 +1,7 @@
 function inspect(
     x, y, z, t, F;
     xu, yu, zu, tu, norm, vmin, vmax, aspect, xlims, ylims, zlims, cmap, new_window, movie,
+    movie_fname,
 )
     @. x = x / xu
     @. y = y / yu
@@ -64,9 +65,7 @@ function inspect(
     ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
 
     if movie
-        ext = splitext(fname)[end]
-        fname_movie = replace(fname, ext => ".mp4")
-        mak.record(fig, fname_movie, 1:length(t); framerate=12) do it
+        mak.record(fig, movie_fname, 1:length(t); framerate=6) do it
             img[4] = F[:,:,:,it]
             ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
         end
@@ -84,7 +83,7 @@ end
 function inspect_xsec(
     x, y, z, t, F, x0, y0, z0;
     xu, yu, zu, tu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-    new_window, movie,
+    new_window, movie, movie_fname,
 )
     @. x = x / xu
     @. y = y / yu
@@ -144,9 +143,7 @@ function inspect_xsec(
     mak.Colorbar(fig[2,3], hm1; vertical=false, flipaxis=false)
 
     if movie
-        ext = splitext(fname)[end]
-        fname_movie = replace(fname, ext => ".mp4")
-        mak.record(fig, fname_movie, 1:length(t); framerate=12) do it
+        mak.record(fig, movie_fname, 1:length(t); framerate=12) do it
             hm1[3] = F[:,:,iz0,it]
             hm2[3] = F[:,iy0,:,it]
             hm3[3] = F[ix0,:,:,it]
