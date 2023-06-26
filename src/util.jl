@@ -108,11 +108,13 @@ end
 
 
 function plot_waveform(model; tu=1)
-    (; source, t) = model
-    (; waveform, p, component) = source
+    (; field, source, t) = model
+    (; waveform, p, icomp) = source
 
     tt = t / tu
     stu = time_units_string(tu)
+
+    component = fieldnames(typeof(field))[icomp]
 
     F = @. waveform(t, (p,))
 
