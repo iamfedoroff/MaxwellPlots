@@ -118,6 +118,10 @@ function plot_viewpoints_spectrum(
             @. Sw = Sw / Snorm
         end
 
+        if yscale == log10
+            Sw = replace(Sw, 0=>eps(eltype(Sw)))   # to avoid log10(0)
+        end
+
         coords = Tuple([round(coord/zu; digits=2) for coord in point])
         label = "$coords $szu"
 
