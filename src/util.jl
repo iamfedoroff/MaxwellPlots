@@ -7,7 +7,7 @@ function space_units_string(xu)
     elseif  xu == 1e-3
         sxu = "mm"
     elseif xu == 1e-6
-        sxu = "um"
+        sxu = "μm"
     elseif xu == 1e-9
         sxu = "nm"
     end
@@ -22,7 +22,7 @@ function time_units_string(tu)
     elseif  tu == 1e-3
         stu = "ms"
     elseif tu == 1e-6
-        stu = "us"
+        stu = "μs"
     elseif tu == 1e-9
         stu = "ns"
     elseif tu == 1e-12

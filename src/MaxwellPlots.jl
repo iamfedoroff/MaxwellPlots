@@ -1,5 +1,6 @@
 module MaxwellPlots
 
+import FFTW
 import GLMakie as mak
 import HDF5
 import Printf: @sprintf
@@ -20,12 +21,15 @@ export plot_geometry,
        plot3D_poynting_averaged,
        plot3D_poynting_averaged_diff,
        plot3D_poynting_averaged_xsec,
-       plot3D_poynting_averaged_xsec_diff
+       plot3D_poynting_averaged_xsec_diff,
+       plot_viewpoints,
+       plot_viewpoints_spectrum
 
 include("util.jl")
 include("recipes3D.jl")
 include("plots1D.jl")
 include("plots2D.jl")
 include("plots3D.jl")
+include("viewpoints.jl")
 
 end
