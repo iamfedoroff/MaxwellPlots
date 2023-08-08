@@ -1,6 +1,6 @@
 function plot_viewpoints(
     fname, svar, viewpoints; new_window=false, norm=false, xlims=nothing, ylims=nothing,
-    zu=1, tu=1, save=false,
+    zu=1, tu=1, Fu=1, save=false,
 )
     Np = length(viewpoints)
 
@@ -41,6 +41,8 @@ function plot_viewpoints(
             # end
             Enorm = maximum(Et)
             @. Et = Et / Enorm
+        else
+            @. Et = Et / Fu
         end
 
         coords = Tuple([round(coord/zu; digits=2) for coord in point])
@@ -71,7 +73,7 @@ end
 
 function plot_viewpoints_spectrum(
     fname, svar, viewpoints; new_window=false, norm=true, xlims=nothing, ylims=nothing,
-    zu=1, wu=1, save=false, yscale=log10,
+    zu=1, wu=1, Fu=1, save=false, yscale=log10,
 )
     Np = length(viewpoints)
 
@@ -116,6 +118,8 @@ function plot_viewpoints_spectrum(
                 Snorm = maximum(Sw)
             end
             @. Sw = Sw / Snorm
+        else
+            @. Sw = Sw / Fu
         end
 
         if yscale == log10
