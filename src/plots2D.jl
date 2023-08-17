@@ -5,8 +5,8 @@ function plot2D(
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "t")
-    F = HDF5.read(fp, svar)
+    t = HDF5.read(fp, "fields/t")
+    F = HDF5.read(fp, "fields/"*svar)
     HDF5.close(fp)
 
     @. x = x / xu
@@ -47,8 +47,8 @@ function inspect2D(
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "t")
-    F = HDF5.read(fp, svar)
+    t = HDF5.read(fp, "fields/t")
+    F = HDF5.read(fp, "fields/"*svar)
     HDF5.close(fp)
 
     @. x = x / xu
@@ -105,8 +105,8 @@ function inspect2D_xsec(
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "t")
-    F = HDF5.read(fp, svar)
+    t = HDF5.read(fp, "fields/t")
+    F = HDF5.read(fp, "fields/"*svar)
     HDF5.close(fp)
 
     @. x = x / xu
@@ -156,10 +156,10 @@ function inspect2D_poynting(
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "t")
-    Hy = HDF5.read(fp, "Hy")
-    Ex = HDF5.read(fp, "Ex")
-    Ez = HDF5.read(fp, "Ez")
+    t = HDF5.read(fp, "fields/t")
+    Hy = HDF5.read(fp, "fields/Hy")
+    Ex = HDF5.read(fp, "fields/Ex")
+    Ez = HDF5.read(fp, "fields/Ez")
     HDF5.close(fp)
 
     F = @. sqrt((-Ez*Hy)^2 + (Ex*Hy)^2)

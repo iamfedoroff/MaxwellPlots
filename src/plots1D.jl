@@ -4,8 +4,8 @@ function plot1D(
 )
     fp = HDF5.h5open(fname, "r")
     z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "t")
-    F = HDF5.read(fp, svar)
+    t = HDF5.read(fp, "fields/t")
+    F = HDF5.read(fp, "fields/"*svar)
     HDF5.close(fp)
 
     @. z = z / zu
@@ -42,8 +42,8 @@ end
 function inspect1D(fname, svar; zu=1, tu=1, vmin=-1, vmax=1, norm=false)
     fp = HDF5.h5open(fname, "r")
     z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "t")
-    F = HDF5.read(fp, svar)
+    t = HDF5.read(fp, "fields/t")
+    F = HDF5.read(fp, "fields/"*svar)
     HDF5.close(fp)
 
     @. z = z / zu
