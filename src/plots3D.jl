@@ -180,7 +180,7 @@ function plot3D_poynting_averaged_xsec(
     fname, x0, y0, z0;
     xu=1, yu=1, zu=1, norm=false, norm_point=nothing, vmin=0, vmax=1, aspect=(1,1,1),
     xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=mak.Reverse(:Hiroshige), new_window=false, save=false,
+    cmap=mak.Reverse(:Hiroshige), new_window=false, save=false, guidelines=true,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
@@ -197,7 +197,7 @@ function plot3D_poynting_averaged_xsec(
     mplot_xsec(
        x, y, z, F, x0, y0, z0;
        xu, yu, zu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-       new_window, save, fname_fig,
+       new_window, save, fname_fig, guidelines,
     )
     return nothing
 end
@@ -208,6 +208,7 @@ function plot3D_poynting_averaged_xsec_diff(
     xu=1, yu=1, zu=1, norm=false, norm_point=nothing, vmin=0, vmax=1,
     xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
     aspect=(1,1,1), cmap=mak.Reverse(:Hiroshige), new_window=false, save=false,
+    guidelines=true,
 )
     fp = HDF5.h5open(fname1, "r")
     x = HDF5.read(fp, "x")
@@ -230,7 +231,7 @@ function plot3D_poynting_averaged_xsec_diff(
     mplot_xsec(
        x, y, z, F, x0, y0, z0;
         xu, yu, zu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-        new_window, save, fname_fig,
+        new_window, save, fname_fig, guidelines,
     )
     return nothing
 end
