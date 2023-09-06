@@ -23,7 +23,8 @@ export plot_geometry,
        plot3D_poynting_averaged_xsec,
        plot3D_poynting_averaged_xsec_diff,
        plot_viewpoints,
-       plot_viewpoints_spectrum
+       plot_viewpoints_spectrum,
+       plot_viewpoints_polarization
 
 include("util.jl")
 include("recipes3D.jl")

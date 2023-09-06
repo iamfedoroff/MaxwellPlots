@@ -150,3 +150,101 @@ function plot_viewpoints_spectrum(
 
     return nothing
 end
+
+
+function plot_viewpoints_polarization(
+    fname, C1, C2, viewpoints; new_window=false, tlims=nothing, Flims=(-1,1), save=false,
+    zu=1, tu=1,
+)
+    Np = length(viewpoints)
+
+    fp = HDF5.h5open(fname, "r")
+
+    if ! ("viewpoints" in keys(fp))
+        error("No viewpoints in $fname")
+    end
+
+    group = fp["viewpoints"]
+
+    for n=1:Np
+        if ! (string(viewpoints[n]) in keys(group))
+            error("Viewpoint $(viewpoints[n]) not in $fname")
+        end
+    end
+
+    szu = space_units_string(zu)
+    stu = time_units_string(tu)
+
+    t = HDF5.read(group, "t")
+    @. t = t / tu
+    if isnothing(tlims)
+        tmin, tmax = extrema(t)
+    else
+        tmin, tmax = tlims
+    end
+    mask = @. (t >= tmin) && (t <= tmax)
+    t = t[mask]
+
+    # read data to find the normalization factor:
+    Enorm = 0
+    for pt in viewpoints
+        Ex = HDF5.read(group, string(pt) * "/" * C1)
+        Ey = HDF5.read(group, string(pt) * "/" * C2)
+        Exmin, Exmax = extrema(Ex)
+        Eymin, Eymax = extrema(Ey)
+        Emin = sqrt(Exmin^2 + Eymin^2)
+        Emax = sqrt(Exmax^2 + Eymax^2)
+        Enorm = max(Enorm, Emin, Emax)
+    end
+    @show Enorm
+
+    xmin, xmax = tmin, tmax
+    ymin, ymax = Flims
+    zmin, zmax = Flims
+
+    tones = ones(length(t))
+
+    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    ax = mak.Axis3(fig[1,1]; perspectiveness=0, xlabel="t ($stu)", ylabel=C2, zlabel=C1)
+    mak.xlims!(ax, (xmin,xmax))
+    mak.ylims!(ax, (ymin,ymax))
+    mak.zlims!(ax, (zmin,zmax))
+    if new_window
+        mak.display(mak.Screen(), fig)
+    else
+        mak.display(fig)
+    end
+
+    # read data, normalize, and plot:
+    for (n, pt) in enumerate(viewpoints)
+        point = HDF5.read(group, "$pt/point")
+        Ex = HDF5.read(group, string(pt) * "/" * C1)
+        Ey = HDF5.read(group, string(pt) * "/" * C2)
+
+        @. Ex = Ex / Enorm
+        @. Ey = Ey / Enorm
+
+        Ex = Ex[mask]
+        Ey = Ey[mask]
+
+        coords = Tuple([round(coord/zu; digits=2) for coord in point])
+        label = "$coords $szu"
+
+        mak.lines!(ax, t, Ey, Ex; label)
+        mak.lines!(ax, t, zmax * tones, Ex; color=mak.Cycled(n), linewidth=0.5)
+        mak.lines!(ax, t, Ey, ymin * tones; color=mak.Cycled(n), linewidth=0.5)
+        mak.lines!(ax, xmax * tones, Ey, Ex; color=mak.Cycled(n), linewidth=0.5)
+    end
+
+    mak.axislegend(ax; framevisible=false)
+
+    HDF5.close(fp)
+
+    if save
+        ext = splitext(fname)[end]
+        fname_fig = replace(fname, ext => ".png")
+        mak.save(fname_fig, fig)
+    end
+
+    return nothing
+end
