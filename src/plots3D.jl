@@ -191,10 +191,13 @@ function plot3D_poynting_averaged_xsec(
 
     @show extrema(F)
 
+    ext = splitext(fname)[end]
+    fname_fig = replace(fname, ext => ".png")
+
     mplot_xsec(
        x, y, z, F, x0, y0, z0;
-        xu, yu, zu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-        new_window, save,
+       xu, yu, zu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
+       new_window, save, fname_fig,
     )
     return nothing
 end
@@ -221,10 +224,13 @@ function plot3D_poynting_averaged_xsec_diff(
 
     @show extrema(F)
 
+    ext = splitext(fname)[end]
+    fname_fig = replace(fname, ext => ".png")
+
     mplot_xsec(
        x, y, z, F, x0, y0, z0;
         xu, yu, zu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-        new_window, save,
+        new_window, save, fname_fig,
     )
     return nothing
 end

@@ -227,7 +227,7 @@ end
 function mplot_xsec(
     x, y, z, F, x0, y0, z0;
     xu, yu, zu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-    new_window, save,
+    new_window, save, fname_fig,
 )
 
     @. x = x / xu
@@ -285,8 +285,6 @@ function mplot_xsec(
     mak.Colorbar(fig[2,3], hm1; vertical=false, flipaxis=false)
 
     if save
-        ext = splitext(fname)[end]
-        fname_fig = replace(fname, ext => ".png")
         mak.save(fname_fig, fig)
     end
     return nothing
