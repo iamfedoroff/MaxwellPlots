@@ -41,8 +41,12 @@ function plot_geometry(
     xu=1, zu=1, cmap=mak.Reverse(:Hiroshige), aspect=1,
     smooth_interfaces=false, new_window=false,
 )
-    Nx, Nz = length(x), length(z)
-    F = [geometry(x[ix],z[iz]) ? 1 : 0 for ix=1:Nx, iz=1:Nz]
+    if typeof(geometry) <: Function
+        Nx, Nz = length(x), length(z)
+        F = [geometry(x[ix],z[iz]) ? 1 : 0 for ix=1:Nx, iz=1:Nz]
+    else
+        F = geometry
+    end
 
     if smooth_interfaces
         F = moving_average(F, 2)
@@ -75,8 +79,12 @@ function plot_geometry(
     xu=1, yu=1, zu=1, cmap=mak.Reverse(:Hiroshige), aspect=:data,
     smooth_interfaces=false, new_window=false,
 )
-    Nx, Ny, Nz = length(x), length(y), length(z)
-    F = [geometry(x[ix],y[iy],z[iz]) ? 1 : 0 for ix=1:Nx, iy=1:Ny, iz=1:Nz]
+    if typeof(geometry) <: Function
+        Nx, Ny, Nz = length(x), length(y), length(z)
+        F = [geometry(x[ix],y[iy],z[iz]) ? 1 : 0 for ix=1:Nx, iy=1:Ny, iz=1:Nz]
+    else
+        F = geometry
+    end
 
     if smooth_interfaces
         F = moving_average(F, 2)
