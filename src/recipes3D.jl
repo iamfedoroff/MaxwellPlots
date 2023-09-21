@@ -83,7 +83,7 @@ end
 function inspect_xsec(
     x, y, z, t, F, x0, y0, z0;
     xu, yu, zu, tu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-    new_window, movie, movie_fname,
+    new_window, movie, movie_fname, guidelines=true,
 )
     @. x = x / xu
     @. y = y / yu
@@ -141,6 +141,19 @@ function inspect_xsec(
     hm2 = mak.heatmap!(ax2, x, z, F[:,iy0,:,it]; colormap, colorrange)
     hm3 = mak.heatmap!(ax3, y, z, F[ix0,:,:,it]; colormap, colorrange)
     mak.Colorbar(fig[2,3], hm1; vertical=false, flipaxis=false)
+
+    # guide lines:
+    if guidelines
+        x0 = x[ix0]
+        y0 = y[iy0]
+        z0 = z[iz0]
+        mak.lines!(ax1, [xmin, xmax], [y0, y0]; color=:white, linewidth=0.5)
+        mak.lines!(ax1, [x0, x0], [ymin, ymax]; color=:white, linewidth=0.5)
+        mak.lines!(ax2, [xmin, xmax], [z0, z0]; color=:white, linewidth=0.5)
+        mak.lines!(ax2, [x0, x0], [zmin, zmax]; color=:white, linewidth=0.5)
+        mak.lines!(ax3, [ymin, ymax], [z0, z0]; color=:white, linewidth=0.5)
+        mak.lines!(ax3, [y0, y0], [zmin, zmax]; color=:white, linewidth=0.5)
+    end
 
     if movie
         mak.record(fig, movie_fname, 1:length(t); framerate=12) do it
