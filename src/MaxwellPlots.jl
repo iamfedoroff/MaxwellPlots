@@ -3,6 +3,7 @@ module MaxwellPlots
 import FFTW
 import GLMakie as mak
 import HDF5
+import KernelAbstractions: @index, @kernel, get_backend
 import Printf: @sprintf
 
 export plot_geometry,

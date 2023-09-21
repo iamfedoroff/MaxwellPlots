@@ -73,8 +73,7 @@ function inspect3D_poynting(
     Ez = HDF5.read(fp, "fields/Ez")
     HDF5.close(fp)
 
-    F = @. sqrt((Ey*Hz - Ez*Hy)^2 + (Ez*Hx - Ex*Hz)^2 + (Ex*Hy - Ey*Hx)^2)
-
+    F = poynting(Hx, Hy, Hz, Ex, Ey, Ez)
     @show extrema(F)
 
     ext = splitext(fname)[end]
@@ -108,8 +107,7 @@ function inspect3D_poynting_xsec(
     Ez = HDF5.read(fp, "fields/Ez")
     HDF5.close(fp)
 
-    F = @. sqrt((Ey*Hz - Ez*Hy)^2 + (Ez*Hx - Ex*Hz)^2 + (Ex*Hy - Ey*Hx)^2)
-
+    F = poynting(Hx, Hy, Hz, Ex, Ey, Ez)
     @show extrema(F)
 
     ext = splitext(fname)[end]
@@ -234,4 +232,23 @@ function plot3D_poynting_averaged_xsec_diff(
         new_window, save, fname_fig, guidelines,
     )
     return nothing
+end
+
+
+# ******************************************************************************************
+@kernel function poynting_kernel!(S, Hx, Hy, Hz, Ex, Ey, Ez)
+    I = @index(Global)
+    @inbounds begin
+        Sx = Ey[I] * Hz[I] - Ez[I] * Hy[I]
+        Sy = Ez[I] * Hx[I] - Ex[I] * Hz[I]
+        Sz = Ex[I] * Hy[I] - Ey[I] * Hx[I]
+        S[I] = sqrt(Sx^2 + Sy^2 + Sz^2)
+    end
+end
+function poynting(Hx, Hy, Hz, Ex, Ey, Ez)
+    S = similar(Hx)
+    backend = get_backend(S)
+    ndrange = size(S)
+    poynting_kernel!(backend)(S, Hx, Hy, Hz, Ex, Ey, Ez; ndrange)
+    return S
 end
