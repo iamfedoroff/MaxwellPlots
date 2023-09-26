@@ -223,8 +223,8 @@ function plot3D_poynting_averaged_xsec_diff(
 
     @show extrema(F)
 
-    ext = splitext(fname)[end]
-    fname_fig = replace(fname, ext => ".png")
+    ext = splitext(fname1)[end]
+    fname_fig = replace(fname1, ext => "_diff.png")
 
     mplot_xsec(
        x, y, z, F, x0, y0, z0;
