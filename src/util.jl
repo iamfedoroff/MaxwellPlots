@@ -77,7 +77,7 @@ end
 function plot_geometry(
     x, y, z, geometry;
     xu=1, yu=1, zu=1, cmap=mak.Reverse(:Hiroshige), aspect=:data,
-    smooth_interfaces=false, new_window=false,
+    smooth_interfaces=false, new_window=false, algorithm=:iso, isovalue=1, absorption=1,
 )
     if typeof(geometry) <: Function
         Nx, Ny, Nz = length(x), length(y), length(z)
@@ -106,9 +106,7 @@ function plot_geometry(
         xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)",
         title="Material geometry", aspect, perspectiveness=0,
     )
-    img = mak.volume!(
-        ax, xx, yy, zz, F; colormap=cmap, algorithm=:iso, isovalue=1,
-    )
+    img = mak.volume!(ax, xx, yy, zz, F; colormap=cmap, algorithm, isovalue, absorption)
     # mak.Colorbar(fig[1,2], img; label="geometry")
     mak.display(fig)
     return nothing
