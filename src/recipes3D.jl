@@ -1,7 +1,9 @@
 function inspect(
     x, y, z, t, F;
-    xu, yu, zu, tu, norm, vmin, vmax, aspect, xlims, ylims, zlims, cmap, new_window, movie,
-    movie_fname,
+    xu=1, yu=1, zu=1, tu=1, norm=true, colormap=nothing, colorrange=(nothing,nothing),
+    aspect=:data, xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
+    tlims=(nothing,nothing), new_window=false, movie=false, movie_fname="movie.mp4",
+    colorbar=true,
 )
     @. x = x / xu
     @. y = y / yu
@@ -12,57 +14,55 @@ function inspect(
     szu = space_units_string(zu)
     stu = time_units_string(tu)
 
+    x, y, z, t, F = apply_limits(x, y, z, t, F; xlims, ylims, zlims, tlims)
+
+    it = 1
+
+    @show extrema(F)
     if norm
         F .= F ./ maximum(F)
     end
 
-    isnothing(xlims[1]) ? xmin=x[1] : xmin=xlims[1]
-    isnothing(xlims[2]) ? xmax=x[end] : xmax=xlims[2]
-    isnothing(ylims[1]) ? ymin=y[1] : ymin=ylims[1]
-    isnothing(ylims[2]) ? ymax=y[end] : ymax=ylims[2]
-    isnothing(zlims[1]) ? zmin=z[1] : zmin=zlims[1]
-    isnothing(zlims[2]) ? zmax=z[end] : zmax=zlims[2]
+
+    # --------------------------------------------------------------------------------------
+    vmin, vmax = colorrange
+    isnothing(vmin) ? vmin = minimum(F) : nothing
+    isnothing(vmax) ? vmax = maximum(F) : nothing
+    colorrange = (vmin, vmax)
+    if vmin * vmax < 0
+        isnothing(colormap) ? colormap = :seismic : nothing
+        colormap = mak.to_colormap(colormap)
+        Nmid = halfint(length(colormap))
+        @. colormap[Nmid-1:Nmid+1] = mak.RGBAf(0,0,0,0)
+    else
+        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+        colormap = mak.to_colormap(colormap)
+        colormap[1] = mak.RGBAf(0,0,0,0)
+    end
 
     fig = mak.Figure(resolution=(950,992), fontsize=14)
+
     ax = mak.Axis3(
         fig[1,1];
         aspect, perspectiveness=0, xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)",
     )
-    mak.xlims!(ax, (xmin,xmax))
-    mak.ylims!(ax, (ymin,ymax))
-    mak.zlims!(ax, (zmin,zmax))
-    if new_window
-        mak.display(mak.Screen(), fig)
-    else
-        mak.display(fig)
-    end
+    mak.limits!(ax, x[1], x[end], y[1], y[end], z[1], z[end])
+    ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
 
-    if vmin * vmax < 0
-        colormap = mak.to_colormap(cmap)
-        Nmid = div(length(colormap),2)
-        # colormap[Nmid+1] = mak.RGBAf(0,0,0,0)
-        @. colormap[Nmid:Nmid+2] = mak.RGBAf(0,0,0,0)
-    else
-        colormap = mak.to_colormap(cmap)
-        colormap[1] = mak.RGBAf(0,0,0,0)
-    end
-
-    it = 1
     img = mak.volume!(
-        ax, x, y, z, F[:,:,:,it];
-        colormap, colorrange=(vmin,vmax),
+        ax, x, y, z, F[:,:,:,it]; colormap, colorrange,
         algorithm=:absorption, absorption=4f0,
-        # algorithm=:iso, isovalue=0.1*vmax,
+        # algorithm=:iso, isovalue=0.5*vmax,
     )
-
     # img = mak.contour!(
     #     ax, x, y, z, F[:,:,:,it];
     #     levels=[0.1*vmin,0.1*vmax], colormap=cmap, colorrange=(vmin,vmax),
     #     alpha=1,
     # )
 
-    mak.Colorbar(fig[1,2], img)
-    ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
+    if colorbar
+        mak.Colorbar(fig[1,2], img; height=mak.Relative(0.5))
+    end
 
     if movie
         mak.record(fig, movie_fname, 1:length(t); framerate=6) do it
@@ -75,6 +75,12 @@ function inspect(
             img[4] = F[:,:,:,it]
             ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
         end
+    end
+
+    if new_window
+        mak.display(mak.Screen(), fig)
+    else
+        mak.display(fig)
     end
     return nothing
 end

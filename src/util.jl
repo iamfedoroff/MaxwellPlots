@@ -58,6 +58,32 @@ function apply_limits(
 end
 
 
+function apply_limits(
+    x, y, z, t, F;
+    xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
+    tlims=(nothing,nothing),
+)
+    xmin, xmax = xlims
+    ymin, ymax = ylims
+    zmin, zmax = zlims
+    tmin, tmax = tlims
+    isnothing(xmin) ? xmin=x[1] : nothing
+    isnothing(xmax) ? xmax=x[end] : nothing
+    isnothing(ymin) ? ymin=y[1] : nothing
+    isnothing(ymax) ? ymax=y[end] : nothing
+    isnothing(zmin) ? zmin=z[1] : nothing
+    isnothing(zmax) ? zmax=z[end] : nothing
+    isnothing(tmin) ? tmin=t[1] : nothing
+    isnothing(tmax) ? tmax=t[end] : nothing
+    ix1, ix2 = argmin(abs.(x.-xmin)), argmin(abs.(x.-xmax))
+    iy1, iy2 = argmin(abs.(y.-ymin)), argmin(abs.(y.-ymax))
+    iz1, iz2 = argmin(abs.(z.-zmin)), argmin(abs.(z.-zmax))
+    it1, it2 = argmin(abs.(t.-tmin)), argmin(abs.(t.-tmax))
+    return x[ix1:ix2], y[iy1:iy2], z[iz1:iz2], t[it1:it2],
+           F[ix1:ix2,iy1:iy2,iz1:iz2,it1:it2]
+end
+
+
 function plot_geometry(
     x, z, geometry;
     xu=1, zu=1, cmap=mak.Reverse(:Hiroshige), aspect=1,
