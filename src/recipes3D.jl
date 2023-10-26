@@ -121,6 +121,8 @@ function inspect_xsec(
     # --------------------------------------------------------------------------------------
     isnothing(colorrange) ? colorrange = (minimum(F), maximum(F)) : nothing
     vmin, vmax = colorrange
+    isnothing(vmin) ? vmin = minimum(F) : nothing
+    isnothing(vmax) ? vmax = maximum(F) : nothing
     if vmin * vmax < 0   # diverging colormap
         isnothing(colormap) ? colormap = :seismic : nothing
     else
@@ -187,9 +189,13 @@ function inspect_xsec(
 end
 
 
-function mplot(
+function inspect_volume(
     x, y, z, F;
-    xu, yu, zu, norm, vmin, vmax, aspect, xlims, ylims, zlims, cmap, new_window, save,
+    xu=1, yu=1, zu=1,
+    xcut=nothing, ycut=nothing, zcut=nothing,
+    xlims=nothing, ylims=nothing, zlims=nothing,
+    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
+    save=false, save_fname="image.png", new_window=false,
 )
     @. x = x / xu
     @. y = y / yu
@@ -198,63 +204,130 @@ function mplot(
     syu = space_units_string(yu)
     szu = space_units_string(zu)
 
+    x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
+
+    Nx, Ny, Nz = size(F)
+    isnothing(xcut) ? ix = halfint(Nx) : ix = argmin(abs.(x.-xcut))
+    isnothing(ycut) ? iy = halfint(Ny) : iy = argmin(abs.(y.-ycut))
+    isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
+
+    @show extrema(F)
     if norm
         F .= F ./ maximum(F)
     end
 
-    isnothing(xlims[1]) ? xmin=x[1] : xmin=xlims[1]
-    isnothing(xlims[2]) ? xmax=x[end] : xmax=xlims[2]
-    isnothing(ylims[1]) ? ymin=y[1] : ymin=ylims[1]
-    isnothing(ylims[2]) ? ymax=y[end] : ymax=ylims[2]
-    isnothing(zlims[1]) ? zmin=z[1] : zmin=zlims[1]
-    isnothing(zlims[2]) ? zmax=z[end] : zmax=zlims[2]
+    # --------------------------------------------------------------------------------------
+    isnothing(colorrange) ? colorrange = (minimum(F), maximum(F)) : nothing
+    vmin, vmax = colorrange
+    isnothing(vmin) ? vmin = minimum(F) : nothing
+    isnothing(vmax) ? vmax = maximum(F) : nothing
+    colorrange = (vmin, vmax)
+
+    isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
 
     fig = mak.Figure(resolution=(950,992), fontsize=14)
+
     ax = mak.Axis3(
-        fig[1,1];
-        aspect, perspectiveness=0, xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)",
+        fig[1,1]; xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)", aspect,
+        perspectiveness=0,
     )
-    mak.xlims!(ax, (xmin,xmax))
-    mak.ylims!(ax, (ymin,ymax))
-    mak.zlims!(ax, (zmin,zmax))
+    mak.limits!(ax, x[1], x[end], y[1], y[end], z[1], z[end])
+    ax.title[] = @sprintf(
+        "x=%.3f %s   y=%.3f %s   z=%.3f %s", x[ix], sxu, y[iy], syu, z[iz], szu,
+    )
+
+    vol = mak.volumeslices!(
+        ax, x, y, z, F; bbox_visible=false, colormap, colorrange,
+    )
+    vol.update_yz[](ix)
+    vol.update_xz[](iy)
+    vol.update_xy[](iz)
+
+    # Spines for cut planes:
+    # color = :gray15
+    # linewidth = 0.7
+    # ix > 1  ? ixm1=ix-1 : ixm1=1
+    # ix < Nx ? ixp1=ix+1 : ixp1=Nx
+    # iy > 1  ? iym1=iy-1 : iym1=1
+    # iy < Ny ? iyp1=iy+1 : iyp1=Ny
+    # iz > 1  ? izm1=iz-1 : izm1=1
+    # iz < Nz ? izp1=iz+1 : izp1=Nz
+    # # x
+    # mak.lines!(ax, [x[1],x[end]], [y[iym1],y[iym1]], [z[izm1],z[izm1]]; color, linewidth)
+    # mak.lines!(ax, [x[1],x[end]], [y[iym1],y[iym1]], [z[izp1],z[izp1]]; color, linewidth)
+    # mak.lines!(ax, [x[1],x[end]], [y[iyp1],y[iyp1]], [z[izm1],z[izm1]]; color, linewidth)
+    # mak.lines!(ax, [x[1],x[end]], [y[iyp1],y[iyp1]], [z[izp1],z[izp1]]; color, linewidth)
+    # # y
+    # mak.lines!(ax, [x[ixm1],x[ixm1]], [y[1],y[end]], [z[izm1],z[izm1]]; color, linewidth)
+    # mak.lines!(ax, [x[ixm1],x[ixm1]], [y[1],y[end]], [z[izp1],z[izp1]]; color, linewidth)
+    # mak.lines!(ax, [x[ixp1],x[ixp1]], [y[1],y[end]], [z[izm1],z[izm1]]; color, linewidth)
+    # mak.lines!(ax, [x[ixp1],x[ixp1]], [y[1],y[end]], [z[izp1],z[izp1]]; color, linewidth)
+    # # z
+    # mak.lines!(ax, [x[ixm1],x[ixm1]], [y[iym1],y[iym1]], [z[1],z[end]]; color, linewidth)
+    # mak.lines!(ax, [x[ixm1],x[ixm1]], [y[iyp1],y[iyp1]], [z[1],z[end]]; color, linewidth)
+    # mak.lines!(ax, [x[ixp1],x[ixp1]], [y[iym1],y[iym1]], [z[1],z[end]]; color, linewidth)
+    # mak.lines!(ax, [x[ixp1],x[ixp1]], [y[iyp1],y[iyp1]], [z[1],z[end]]; color, linewidth)
+    # mak.hidedecorations!(ax)
+    # mak.hidespines!(ax)
+
+    if colorbar
+        mak.Colorbar(fig[1,2], vol.heatmap_xy[], height=mak.Relative(0.5))
+    end
+
+    if save
+        mak.save(save_fname, fig)
+    else
+        sg = mak.SliderGrid(
+            fig[2,1],
+            (label="x", range=1:length(x), startvalue=ix),
+            (label="y", range=1:length(y), startvalue=iy),
+            (label="z", range=1:length(z), startvalue=iz),
+        )
+        mak.on(sg.sliders[1].value) do i
+            ix = i
+            vol.update_yz[](ix)
+            ax.title[] = @sprintf(
+                "x=%.3f %s   y=%.3f %s   z=%.3f %s", x[ix], sxu, y[iy], syu, z[iz], szu,
+            )
+        end
+        mak.on(sg.sliders[2].value) do i
+            iy = i
+            vol.update_xz[](iy)
+            ax.title[] = @sprintf(
+                "x=%.3f %s   y=%.3f %s   z=%.3f %s", x[ix], sxu, y[iy], syu, z[iz], szu,
+            )
+        end
+        mak.on(sg.sliders[3].value) do i
+            iz = i
+            vol.update_xy[](iz)
+            ax.title[] = @sprintf(
+                "x=%.3f %s   y=%.3f %s   z=%.3f %s", x[ix], sxu, y[iy], syu, z[iz], szu,
+            )
+        end
+
+        # hmaps = [vol.heatmap_yz[], vol.heatmap_xz[], vol.heatmap_xy[]]
+        # toggles = [mak.Toggle(sg.layout[i,4], active=true) for i in 1:length(hmaps)]
+        # map(zip(hmaps, toggles)) do (h, t)
+        #     mak.connect!(h.visible, t.active)
+        # end
+    end
+
     if new_window
         mak.display(mak.Screen(), fig)
     else
         mak.display(fig)
-    end
-
-    if vmin * vmax < 0
-        colormap = mak.to_colormap(cmap)
-        Nmid = div(length(colormap),2)
-        # colormap[Nmid+1] = mak.RGBAf(0,0,0,0)
-        @. colormap[Nmid:Nmid+2] = mak.RGBAf(0,0,0,0)
-    else
-        colormap = mak.to_colormap(cmap)
-        colormap[1] = mak.RGBAf(0,0,0,0)
-    end
-
-    img = mak.volume!(
-        ax, x, y, z, F;
-        colormap, colorrange=(vmin,vmax),
-        algorithm=:absorption, absorption=4f0,
-    )
-    mak.Colorbar(fig[1,2], img)
-
-    if save
-        ext = splitext(fname)[end]
-        fname_fig = replace(fname, ext => ".png")
-        mak.save(fname_fig, fig)
     end
     return nothing
 end
 
 
-function mplot_xsec(
-    x, y, z, F, x0, y0, z0;
-    xu, yu, zu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-    new_window, save, fname_fig, guidelines=true,
+function plot_volume(
+    x, y, z, F;
+    xu=1, yu=1, zu=1,
+    xlims=nothing, ylims=nothing, zlims=nothing,
+    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
+    save=false, save_fname="image.png", new_window=false,
 )
-
     @. x = x / xu
     @. y = y / yu
     @. z = z / zu
@@ -262,68 +335,140 @@ function mplot_xsec(
     syu = space_units_string(yu)
     szu = space_units_string(zu)
 
-    ix0 = argmin(abs.(x .- x0))
-    iy0 = argmin(abs.(y .- y0))
-    iz0 = argmin(abs.(z .- z0))
+    x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
 
+    @show extrema(F)
     if norm
-        if isnothing(norm_point)
-            F .= F ./ maximum(F)
-        else
-            xn, yn, zn = norm_point
-            ixn = argmin(abs.(x .- xn))
-            iyn = argmin(abs.(y .- yn))
-            izn = argmin(abs.(z .- zn))
-            @views F .= F ./ maximum(F[ixn,iyn,izn,:])
-        end
+        F .= F ./ maximum(F)
     end
 
-    isnothing(xlims[1]) ? xmin=x[1] : xmin=xlims[1]
-    isnothing(xlims[2]) ? xmax=x[end] : xmax=xlims[2]
-    isnothing(ylims[1]) ? ymin=y[1] : ymin=ylims[1]
-    isnothing(ylims[2]) ? ymax=y[end] : ymax=ylims[2]
-    isnothing(zlims[1]) ? zmin=z[1] : zmin=zlims[1]
-    isnothing(zlims[2]) ? zmax=z[end] : zmax=zlims[2]
+    # --------------------------------------------------------------------------------------
+    isnothing(colorrange) ? colorrange = (minimum(F), maximum(F)) : nothing
+    vmin, vmax = colorrange
+    isnothing(vmin) ? vmin = minimum(F) : nothing
+    isnothing(vmax) ? vmax = maximum(F) : nothing
+    colorrange = (vmin, vmax)
+    if vmin * vmax < 0
+        isnothing(colormap) ? colormap = :seismic : nothing
+        colormap = mak.to_colormap(colormap)
+        Nmid = halfint(length(colormap))
+        @. colormap[Nmid-1:Nmid+1] = mak.RGBAf(0,0,0,0)
+    else
+        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+        colormap = mak.to_colormap(colormap)
+        colormap[1] = mak.RGBAf(0,0,0,0)
+    end
 
-    fig = mak.Figure(resolution=(1600,600), fontsize=14)
-    ax1 = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="y ($syu)", aspect=aspect[1])
-    ax2 = mak.Axis(fig[1,2]; xlabel="x ($sxu)", ylabel="z ($szu)", aspect=aspect[2])
-    ax3 = mak.Axis(fig[1,3]; xlabel="y ($syu)", ylabel="z ($szu)", aspect=aspect[3])
-    mak.xlims!(ax1, (xmin,xmax))
-    mak.ylims!(ax1, (ymin,ymax))
-    mak.xlims!(ax2, (xmin,xmax))
-    mak.ylims!(ax2, (zmin,zmax))
-    mak.xlims!(ax3, (ymin,ymax))
-    mak.ylims!(ax3, (zmin,zmax))
+    fig = mak.Figure(resolution=(950,992), fontsize=14)
+
+    ax = mak.Axis3(
+        fig[1,1]; xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)", aspect,
+        perspectiveness=0,
+    )
+    mak.limits!(ax, x[1], x[end], y[1], y[end], z[1], z[end])
+
+    img = mak.volume!(
+        ax, x, y, z, F; colormap, colorrange,
+        algorithm=:absorption, absorption=4f0,
+    )
+
+    if colorbar
+        mak.Colorbar(fig[1,2], img; height=mak.Relative(0.5))
+    end
+
+    if save
+        mak.save(save_fname, fig)
+    end
+
     if new_window
         mak.display(mak.Screen(), fig)
     else
         mak.display(fig)
     end
+    return nothing
+end
 
-    colormap = cmap
-    colorrange = (vmin,vmax)
 
-    hm1 = mak.heatmap!(ax1, x, y, F[:,:,iz0]; colormap, colorrange)
-    hm2 = mak.heatmap!(ax2, x, z, F[:,iy0,:]; colormap, colorrange)
-    hm3 = mak.heatmap!(ax3, y, z, F[ix0,:,:]; colormap, colorrange)
-    mak.Colorbar(fig[2,3], hm1; vertical=false, flipaxis=false)
+function plot_volume_xsec(
+    x, y, z, F;
+    xu=1, yu=1, zu=1,
+    xcut=nothing, ycut=nothing, zcut=nothing,
+    xlims=nothing, ylims=nothing, zlims=nothing,
+    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=(1,1,1),
+    save=false, save_fname="image.png", new_window=false, guidelines=true,
+)
+    @. x = x / xu
+    @. y = y / yu
+    @. z = z / zu
+    sxu = space_units_string(xu)
+    syu = space_units_string(yu)
+    szu = space_units_string(zu)
+
+    x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
+
+    Nx, Ny, Nz = size(F)
+    isnothing(xcut) ? ix = halfint(Nx) : ix = argmin(abs.(x.-xcut))
+    isnothing(ycut) ? iy = halfint(Ny) : iy = argmin(abs.(y.-ycut))
+    isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
+    Lx, Ly, Lz  = x[end]-x[1], y[end]-y[1], z[end]-z[1]
+
+    @show extrema(F)
+    if norm
+        F .= F ./ maximum(F)
+    end
+
+    # --------------------------------------------------------------------------------------
+    isnothing(colorrange) ? colorrange = (minimum(F), maximum(F)) : nothing
+    vmin, vmax = colorrange
+    isnothing(vmin) ? vmin = minimum(F) : nothing
+    isnothing(vmax) ? vmax = maximum(F) : nothing
+    if vmin * vmax < 0   # diverging colormap
+        isnothing(colormap) ? colormap = :seismic : nothing
+    else
+        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+    end
+
+    isnothing(aspect) ? aspect = (Lx/Ly, Lx/Lz, Ly/Lz) : nothing
+    isnothing(aspect[1]) ? aspect[1] = Lx/Ly : nothing
+    isnothing(aspect[2]) ? aspect[2] = Lx/Lz : nothing
+    isnothing(aspect[3]) ? aspect[3] = Ly/Lz : nothing
+
+    fig = mak.Figure(resolution=(1600,600), fontsize=14)
+    ax1 = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="y ($syu)", aspect=aspect[1])
+    ax2 = mak.Axis(fig[1,2]; xlabel="x ($sxu)", ylabel="z ($szu)", aspect=aspect[2])
+    ax3 = mak.Axis(fig[1,3]; xlabel="y ($syu)", ylabel="z ($szu)", aspect=aspect[3])
+    mak.limits!(ax1, x[1], x[end], y[1], y[end])
+    mak.limits!(ax2, x[1], x[end], z[1], z[end])
+    mak.limits!(ax3, y[1], y[end], z[1], z[end])
+
+    hm1 = mak.heatmap!(ax1, x, y, F[:,:,iz]; colormap, colorrange)
+    hm2 = mak.heatmap!(ax2, x, z, F[:,iy,:]; colormap, colorrange)
+    hm3 = mak.heatmap!(ax3, y, z, F[ix,:,:]; colormap, colorrange)
+
+    if colorbar
+        mak.Colorbar(fig[2,2], hm1; vertical=false, flipaxis=false)
+    end
 
     # guide lines:
     if guidelines
-        x0 = x[ix0]
-        y0 = y[iy0]
-        z0 = z[iz0]
-        mak.lines!(ax1, [xmin, xmax], [y0, y0]; color=:white, linewidth=0.5)
-        mak.lines!(ax1, [x0, x0], [ymin, ymax]; color=:white, linewidth=0.5)
-        mak.lines!(ax2, [xmin, xmax], [z0, z0]; color=:white, linewidth=0.5)
-        mak.lines!(ax2, [x0, x0], [zmin, zmax]; color=:white, linewidth=0.5)
-        mak.lines!(ax3, [ymin, ymax], [z0, z0]; color=:white, linewidth=0.5)
-        mak.lines!(ax3, [y0, y0], [zmin, zmax]; color=:white, linewidth=0.5)
+        color = :gray15
+        linewidth = 0.5
+        mak.lines!(ax1, [x[1], x[end]], [y[iy], y[iy]]; color, linewidth)
+        mak.lines!(ax1, [x[ix], x[ix]], [y[1], y[end]]; color, linewidth)
+        mak.lines!(ax2, [x[1], x[end]], [z[iz], z[iz]]; color, linewidth)
+        mak.lines!(ax2, [x[ix], x[ix]], [z[1], z[end]]; color, linewidth)
+        mak.lines!(ax3, [y[1], y[end]], [z[iz], z[iz]]; color, linewidth)
+        mak.lines!(ax3, [y[iy], y[iy]], [z[1], z[end]]; color, linewidth)
     end
 
     if save
-        mak.save(fname_fig, fig)
+        mak.save(save_fname, fig)
+    end
+
+    if new_window
+        mak.display(mak.Screen(), fig)
+    else
+        mak.display(fig)
     end
     return nothing
 end

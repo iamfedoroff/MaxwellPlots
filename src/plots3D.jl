@@ -85,222 +85,185 @@ function inspect3D_xsec(
 end
 
 
-function inspect3D_poynting_averaged(
-    fname; xu=1, yu=1, zu=1, colormap=mak.Reverse(:Hiroshige), colorrange=(0,1), norm=true,
-    xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing), xcut=nothing,
-    ycut=nothing, zcut=nothing, new_window=false, colorbar=true, save=false,
-    save_fname=nothing,
+function inspect3D_volume(
+    fname, var;
+    xu=1, yu=1, zu=1,
+    xcut=nothing, ycut=nothing, zcut=nothing,
+    xlims=nothing, ylims=nothing, zlims=nothing,
+    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
+    save=false, save_fname=nothing, new_window=false,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
-    F = HDF5.read(fp, "Sa")
+    if var == :Sa
+        F = HDF5.read(fp, "Sa")
+        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+    else
+        error("Wrong input varible " * string(var))
+    end
     HDF5.close(fp)
 
-    @. x = x / xu
-    @. y = y / yu
-    @. z = z / zu
-
-    x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
-
-    Nx, Ny, Nz = size(F)
-    isnothing(xcut) ? ix = halfint(Nx) : ix = argmin(abs.(x.-xcut))
-    isnothing(ycut) ? iy = halfint(Ny) : iy = argmin(abs.(y.-ycut))
-    isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
-    Lx, Ly, Lz  = x[end]-x[1], y[end]-y[1], z[end]-z[1]
-
-    @show extrema(F)
-    if norm
-        F .= F ./ maximum(F)
+    if save && isnothing(save_fname)
+        ext = splitext(fname)[end]
+        save_fname = replace(fname, ext => ".png")
     end
 
-    # --------------------------------------------------------------------------------------
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
-
-    ax = mak.Axis3(
-        fig[1,1]; perspectiveness=0, xlabel="x (μm)", ylabel="y (μm)", zlabel="z (μm)",
-        aspect=(Lx/Lz,Ly/Lz,1),
-    )
-    mak.limits!(ax, x[1], x[end], y[1], y[end], z[1], z[end])
-    ax.title[] = @sprintf("x=%.3f μm   y=%.3f μm   z=%.3f μm", x[ix], y[iy], z[iz])
-
-    vol = mak.volumeslices!(
-        ax, x, y, z, F; bbox_visible=false, colormap, colorrange,
-    )
-    vol.update_yz[](ix)
-    vol.update_xz[](iy)
-    vol.update_xy[](iz)
-
-    # Spines for cut planes:
-    # color = :black
-    # linewidth = 0.7
-    # mak.lines!(ax, [x[1],x[end]], [y[iy-1],y[iy-1]], [z[iz+1],z[iz+1]]; color, linewidth)
-    # mak.lines!(ax, [x[ix-1],x[ix-1]], [y[1],y[end]], [z[iz+1],z[iz+1]]; color, linewidth)
-    # mak.lines!(ax, [x[ix-1],x[ix-1]], [y[iy-1],y[iy-1]], [z[1],z[end]]; color, linewidth)
-    # mak.lines!(ax, [x[1],x[end]], [y[iy],y[iy]], [z[end],z[end]]; color, linewidth)
-    # mak.lines!(ax, [x[ix],x[ix]], [y[1],y[end]], [z[end],z[end]]; color, linewidth)
-    # mak.hidedecorations!(ax)
-    # mak.hidespines!(ax)
-
-    if colorbar
-        mak.Colorbar(fig[1,2], vol.heatmap_xy[])
-    end
-
-    if save
-        if isnothing(save_fname)
-            ext = splitext(fname)[end]
-            save_fname = replace(fname, ext => ".png")
-        end
-        mak.save(save_fname, fig)
-    else
-        sg = mak.SliderGrid(
-            fig[2,1],
-            (label="x", range=1:length(x), startvalue=ix),
-            (label="y", range=1:length(y), startvalue=iy),
-            (label="z", range=1:length(z), startvalue=iz),
-        )
-        mak.on(sg.sliders[1].value) do i
-            ix = i
-            vol.update_yz[](ix)
-            ax.title[] = @sprintf("%.3f μm  %.3f μm  %.3f μm", x[ix], y[iy], z[iz])
-        end
-        mak.on(sg.sliders[2].value) do i
-            iy = i
-            vol.update_xz[](iy)
-            ax.title[] = @sprintf("%.3f μm  %.3f μm  %.3f μm", x[ix], y[iy], z[iz])
-        end
-        mak.on(sg.sliders[3].value) do i
-            iz = i
-            vol.update_xy[](iz)
-            ax.title[] = @sprintf("%.3f μm  %.3f μm  %.3f μm", x[ix], y[iy], z[iz])
-        end
-
-        # hmaps = [vol.heatmap_yz[], vol.heatmap_xz[], vol.heatmap_xy[]]
-        # toggles = [mak.Toggle(sg.layout[i,4], active=true) for i in 1:length(hmaps)]
-        # map(zip(hmaps, toggles)) do (h, t)
-        #     mak.connect!(h.visible, t.active)
-        # end
-    end
-
-    if new_window
-        mak.display(mak.Screen(), fig)
-    else
-        mak.display(fig)
-    end
-
-    return nothing
-end
-
-
-function plot3D_poynting_averaged(
-    fname;
-    xu=1, yu=1, zu=1, norm=false, vmin=0, vmax=1, aspect=:data,
-    xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=mak.Reverse(:Hiroshige), new_window=false, save=false,
-)
-    fp = HDF5.h5open(fname, "r")
-    x = HDF5.read(fp, "x")
-    y = HDF5.read(fp, "y")
-    z = HDF5.read(fp, "z")
-    F = HDF5.read(fp, "Sa")
-    HDF5.close(fp)
-
-    @show extrema(F)
-
-    mplot(
+    inspect_volume(
         x, y, z, F;
-        xu, yu, zu, norm, vmin, vmax, aspect, xlims, ylims, zlims, cmap, new_window, save,
+        xu, yu, zu, xcut, ycut, zcut, xlims, ylims, zlims, norm, colormap, colorrange,
+        colorbar, aspect, save, save_fname, new_window,
     )
     return nothing
 end
 
 
-function plot3D_poynting_averaged_diff(
-    fname1, fname2;
-    xu=1, yu=1, zu=1, norm=false, vmin=-1, vmax=1, aspect=:data,
-    xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=:seismic, new_window=false, save=false,
+function plot3D(
+    fname, var;
+    xu=1, yu=1, zu=1,
+    xlims=nothing, ylims=nothing, zlims=nothing,
+    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
+    save=false, save_fname=nothing, new_window=false,
+)
+    fp = HDF5.h5open(fname, "r")
+    x = HDF5.read(fp, "x")
+    y = HDF5.read(fp, "y")
+    z = HDF5.read(fp, "z")
+    if var == :Sa
+        F = HDF5.read(fp, "Sa")
+        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+    end
+    HDF5.close(fp)
+
+    if save && isnothing(save_fname)
+        ext = splitext(fname)[end]
+        save_fname = replace(fname, ext => ".png")
+    end
+
+    plot_volume(
+        x, y, z, F;
+        xu, yu, zu, xlims, ylims, zlims, norm, colormap, colorrange, colorbar, aspect, save,
+        save_fname, new_window,
+    )
+    return nothing
+end
+
+
+function plot3D_diff(
+    fname1, fname2, var;
+    xu=1, yu=1, zu=1,
+    xlims=nothing, ylims=nothing, zlims=nothing,
+    norm=true, colormap=:seismic, colorrange=nothing, colorbar=true, aspect=:data,
+    save=false, save_fname=nothing, new_window=false,
 )
     fp = HDF5.h5open(fname1, "r")
-    x = HDF5.read(fp, "x")
-    y = HDF5.read(fp, "y")
-    z = HDF5.read(fp, "z")
-    F1 = HDF5.read(fp, "Sa")
+    x1 = HDF5.read(fp, "x")
+    y1 = HDF5.read(fp, "y")
+    z1 = HDF5.read(fp, "z")
+    if var == :Sa
+        F1 = HDF5.read(fp, "Sa")
+    end
     HDF5.close(fp)
 
     fp = HDF5.h5open(fname2, "r")
-    F2 = HDF5.read(fp, "Sa")
+    x2 = HDF5.read(fp, "x")
+    y2 = HDF5.read(fp, "y")
+    z2 = HDF5.read(fp, "z")
+    if var == :Sa
+        F2 = HDF5.read(fp, "Sa")
+    end
     HDF5.close(fp)
+
+    @assert x1==x2 && y1==y2 && z1==z2
 
     F = @. F2 - F1
 
-    @show extrema(F)
+    if save && isnothing(save_fname)
+        ext = splitext(fname2)[end]
+        save_fname = replace(fname2, ext => "_diff.png")
+    end
 
-    mplot(
-        x, y, z, F;
-        xu, yu, zu, norm, vmin, vmax, aspect, xlims, ylims, zlims, cmap, new_window, save,
+    plot_volume(
+        x1, y1, z1, F;
+        xu, yu, zu, xlims, ylims, zlims, norm, colormap, colorrange, colorbar, aspect, save,
+        save_fname, new_window,
     )
     return nothing
 end
 
 
-function plot3D_poynting_averaged_xsec(
-    fname, x0, y0, z0;
-    xu=1, yu=1, zu=1, norm=false, norm_point=nothing, vmin=0, vmax=1, aspect=(1,1,1),
-    xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=mak.Reverse(:Hiroshige), new_window=false, save=false, guidelines=true,
+function plot3D_xsec(
+    fname, var;
+    xu=1, yu=1, zu=1,
+    xcut=nothing, ycut=nothing, zcut=nothing,
+    xlims=nothing, ylims=nothing, zlims=nothing,
+    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=(1,1,1),
+    save=false, save_fname=nothing, new_window=false, guidelines=true,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
-    F = HDF5.read(fp, "Sa")
+    if var == :Sa
+        F = HDF5.read(fp, "Sa")
+        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+    end
     HDF5.close(fp)
 
-    @show extrema(F)
+    if save && isnothing(save_fname)
+        ext = splitext(fname)[end]
+        save_fname = replace(fname, ext => ".png")
+    end
 
-    ext = splitext(fname)[end]
-    fname_fig = replace(fname, ext => ".png")
-
-    mplot_xsec(
-       x, y, z, F, x0, y0, z0;
-       xu, yu, zu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-       new_window, save, fname_fig, guidelines,
+    plot_volume_xsec(
+        x, y, z, F;
+        xu, yu, zu, xcut, ycut, zcut, xlims, ylims, zlims, norm, colormap, colorrange,
+        colorbar, aspect, save, save_fname, new_window, guidelines,
     )
     return nothing
 end
 
 
-function plot3D_poynting_averaged_xsec_diff(
-    fname1, fname2, x0, y0, z0;
-    xu=1, yu=1, zu=1, norm=false, norm_point=nothing, vmin=0, vmax=1,
-    xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
-    aspect=(1,1,1), cmap=mak.Reverse(:Hiroshige), new_window=false, save=false,
-    guidelines=true,
+function plot3D_xsec_diff(
+    fname1, fname2, var;
+    xu=1, yu=1, zu=1,
+    xcut=nothing, ycut=nothing, zcut=nothing,
+    xlims=nothing, ylims=nothing, zlims=nothing,
+    norm=true, colormap=:seismic, colorrange=nothing, colorbar=true, aspect=(1,1,1),
+    save=false, save_fname=nothing, new_window=false, guidelines=true,
 )
     fp = HDF5.h5open(fname1, "r")
-    x = HDF5.read(fp, "x")
-    y = HDF5.read(fp, "y")
-    z = HDF5.read(fp, "z")
-    F1 = HDF5.read(fp, "Sa")
+    x1 = HDF5.read(fp, "x")
+    y1 = HDF5.read(fp, "y")
+    z1 = HDF5.read(fp, "z")
+    if var == :Sa
+        F1 = HDF5.read(fp, "Sa")
+    end
     HDF5.close(fp)
 
     fp = HDF5.h5open(fname2, "r")
-    F2 = HDF5.read(fp, "Sa")
+    x2 = HDF5.read(fp, "x")
+    y2 = HDF5.read(fp, "y")
+    z2 = HDF5.read(fp, "z")
+    if var == :Sa
+        F2 = HDF5.read(fp, "Sa")
+    end
     HDF5.close(fp)
+
+    @assert x1==x2 && y1==y2 && z1==z2
 
     F = @. F2 - F1
 
-    @show extrema(F)
+    if save && isnothing(save_fname)
+        ext = splitext(fname2)[end]
+        save_fname = replace(fname2, ext => "_diff.png")
+    end
 
-    ext = splitext(fname1)[end]
-    fname_fig = replace(fname1, ext => "_diff.png")
-
-    mplot_xsec(
-       x, y, z, F, x0, y0, z0;
-        xu, yu, zu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-        new_window, save, fname_fig, guidelines,
+    plot_volume_xsec(
+        x1, y1, z1, F;
+        xu, yu, zu, xcut, ycut, zcut, xlims, ylims, zlims, norm, colormap, colorrange,
+        colorbar, aspect, save, save_fname, new_window, guidelines,
     )
     return nothing
 end
