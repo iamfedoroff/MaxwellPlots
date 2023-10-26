@@ -1,9 +1,9 @@
 function inspect3D(
     fname, var;
-    xu=1, yu=1, zu=1, tu=1, norm=true, colormap=nothing, colorrange=(nothing,nothing),
-    aspect=:data, xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
-    tlims=(nothing,nothing), new_window=false, movie=false, movie_fname=nothing,
-    colorbar=true,
+    xu=1, yu=1, zu=1, tu=1,
+    xlims=nothing, ylims=nothing, zlims=nothing, tlims=nothing,
+    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
+    movie=false, movie_fname=nothing, new_window=false,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
@@ -34,70 +34,52 @@ function inspect3D(
 
     inspect(
         x, y, z, t, F;
-        xu, yu, zu, tu, norm, colormap, colorrange, aspect, new_window, movie, movie_fname,
-        xlims, ylims, zlims, tlims, colorbar,
+        xu, yu, zu, tu, xlims, ylims, zlims, tlims, norm, colormap, colorrange, colorbar,
+        aspect, movie, movie_fname, new_window,
     )
     return nothing
 end
 
 
 function inspect3D_xsec(
-    fname, svar, x0, y0, z0;
-    xu=1, yu=1, zu=1, tu=1, norm=false, norm_point=nothing, vmin=-1, vmax=1, aspect=(1,1,1),
-    xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=:seismic, new_window=false, movie=false,
+    fname, var;
+    xu=1, yu=1, zu=1, tu=1,
+    xcut=nothing, ycut=nothing, zcut=nothing, tlims=nothing,
+    xlims=nothing, ylims=nothing, zlims=nothing,
+    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=(1,1,1),
+    movie=false, movie_fname=nothing, new_window=false, guidelines=true,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
     t = HDF5.read(fp, "fields/t")
-    F = HDF5.read(fp, "fields/"*svar)
+    if var in (:Ex, :Ey, :Ez, :Hx, :Hy, :Hz)
+        F = HDF5.read(fp, "fields/" * string(var))
+        isnothing(colormap) ? colormap = :seismic : nothing
+    elseif var == :poynting
+        Hx = HDF5.read(fp, "fields/Hx")
+        Hy = HDF5.read(fp, "fields/Hy")
+        Hz = HDF5.read(fp, "fields/Hz")
+        Ex = HDF5.read(fp, "fields/Ex")
+        Ey = HDF5.read(fp, "fields/Ey")
+        Ez = HDF5.read(fp, "fields/Ez")
+        F = poynting(Hx, Hy, Hz, Ex, Ey, Ez)
+        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+    else
+        error("Wrong input varible " * string(var))
+    end
     HDF5.close(fp)
 
-    @show extrema(F)
-
-    ext = splitext(fname)[end]
-    movie_fname = replace(fname, ext => ".mp4")
-
-    inspect_xsec(
-        x, y, z, t, F, x0, y0, z0;
-        xu, yu, zu, tu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-        new_window, movie, movie_fname,
-    )
-    return nothing
-end
-
-
-function inspect3D_poynting_xsec(
-    fname, x0, y0, z0;
-    xu=1, yu=1, zu=1, tu=1, norm=false, norm_point=nothing, vmin=0, vmax=1, aspect=(1,1,1),
-    xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=mak.Reverse(:Hiroshige), new_window=false, movie=false,
-)
-    fp = HDF5.h5open(fname, "r")
-    x = HDF5.read(fp, "x")
-    y = HDF5.read(fp, "y")
-    z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "fields/t")
-    Hx = HDF5.read(fp, "fields/Hx")
-    Hy = HDF5.read(fp, "fields/Hy")
-    Hz = HDF5.read(fp, "fields/Hz")
-    Ex = HDF5.read(fp, "fields/Ex")
-    Ey = HDF5.read(fp, "fields/Ey")
-    Ez = HDF5.read(fp, "fields/Ez")
-    HDF5.close(fp)
-
-    F = poynting(Hx, Hy, Hz, Ex, Ey, Ez)
-    @show extrema(F)
-
-    ext = splitext(fname)[end]
-    movie_fname = replace(fname, ext => ".mp4")
+    if movie && isnothing(movie_fname)
+        ext = splitext(fname)[end]
+        movie_fname = replace(fname, ext => ".mp4")
+    end
 
     inspect_xsec(
-        x, y, z, t, F, x0, y0, z0;
-        xu, yu, zu, tu, norm, norm_point, vmin, vmax, aspect, xlims, ylims, zlims, cmap,
-        new_window, movie, movie_fname,
+        x, y, z, t, F;
+        xu, yu, zu, tu, xcut, ycut, zcut, xlims, ylims, zlims, tlims, norm, colormap,
+        colorrange, colorbar, aspect, movie, movie_fname, new_window, guidelines,
     )
     return nothing
 end
@@ -126,9 +108,7 @@ function inspect3D_poynting_averaged(
     isnothing(xcut) ? ix = halfint(Nx) : ix = argmin(abs.(x.-xcut))
     isnothing(ycut) ? iy = halfint(Ny) : iy = argmin(abs.(y.-ycut))
     isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
-    Lx = x[end] - x[1]
-    Ly = y[end] - y[1]
-    Lz = z[end] - z[1]
+    Lx, Ly, Lz  = x[end]-x[1], y[end]-y[1], z[end]-z[1]
 
     @show extrema(F)
     if norm

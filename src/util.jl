@@ -39,9 +39,10 @@ function time_units_string(tu)
 end
 
 
-function apply_limits(
-    x, y, z, F; xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
-)
+function apply_limits(x, y, z, F; xlims=nothing, ylims=nothing, zlims=nothing)
+    isnothing(xlims) ? xlims=(nothing,nothing) : nothing
+    isnothing(ylims) ? ylims=(nothing,nothing) : nothing
+    isnothing(zlims) ? zlims=(nothing,nothing) : nothing
     xmin, xmax = xlims
     ymin, ymax = ylims
     zmin, zmax = zlims
@@ -59,10 +60,12 @@ end
 
 
 function apply_limits(
-    x, y, z, t, F;
-    xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
-    tlims=(nothing,nothing),
+    x, y, z, t, F; xlims=nothing, ylims=nothing, zlims=nothing, tlims=nothing,
 )
+    isnothing(xlims) ? xlims=(nothing,nothing) : nothing
+    isnothing(ylims) ? ylims=(nothing,nothing) : nothing
+    isnothing(zlims) ? zlims=(nothing,nothing) : nothing
+    isnothing(tlims) ? tlims=(nothing,nothing) : nothing
     xmin, xmax = xlims
     ymin, ymax = ylims
     zmin, zmax = zlims
