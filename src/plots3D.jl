@@ -12,7 +12,7 @@ function inspect3D(
     t = HDF5.read(fp, "fields/t")
     if var in (:Ex, :Ey, :Ez, :Hx, :Hy, :Hz)
         F = HDF5.read(fp, "fields/" * string(var))
-        isnothing(colormap) ? colormap = :seismic : nothing
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
     elseif var == :poynting
         Hx = HDF5.read(fp, "fields/Hx")
         Hy = HDF5.read(fp, "fields/Hy")
@@ -21,7 +21,7 @@ function inspect3D(
         Ey = HDF5.read(fp, "fields/Ey")
         Ez = HDF5.read(fp, "fields/Ez")
         F = poynting(Hx, Hy, Hz, Ex, Ey, Ez)
-        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+        isnothing(colormap) ? colormap = CMAP : nothing
     else
         error("Wrong input varible " * string(var))
     end
@@ -56,7 +56,7 @@ function inspect3D_xsec(
     t = HDF5.read(fp, "fields/t")
     if var in (:Ex, :Ey, :Ez, :Hx, :Hy, :Hz)
         F = HDF5.read(fp, "fields/" * string(var))
-        isnothing(colormap) ? colormap = :seismic : nothing
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
     elseif var == :poynting
         Hx = HDF5.read(fp, "fields/Hx")
         Hy = HDF5.read(fp, "fields/Hy")
@@ -65,7 +65,7 @@ function inspect3D_xsec(
         Ey = HDF5.read(fp, "fields/Ey")
         Ez = HDF5.read(fp, "fields/Ez")
         F = poynting(Hx, Hy, Hz, Ex, Ey, Ez)
-        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+        isnothing(colormap) ? colormap = CMAP : nothing
     else
         error("Wrong input varible " * string(var))
     end
@@ -99,7 +99,7 @@ function inspect3D_volume(
     z = HDF5.read(fp, "z")
     if var == :Sa
         F = HDF5.read(fp, "Sa")
-        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+        isnothing(colormap) ? colormap = CMAP : nothing
     else
         error("Wrong input varible " * string(var))
     end
@@ -132,7 +132,7 @@ function plot3D(
     z = HDF5.read(fp, "z")
     if var == :Sa
         F = HDF5.read(fp, "Sa")
-        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+        isnothing(colormap) ? colormap = CMAP : nothing
     end
     HDF5.close(fp)
 
@@ -154,7 +154,7 @@ function plot3D_diff(
     fname1, fname2, var;
     xu=1, yu=1, zu=1,
     xlims=nothing, ylims=nothing, zlims=nothing,
-    norm=true, colormap=:seismic, colorrange=nothing, colorbar=true, aspect=:data,
+    norm=true, colormap=CMAPDIV, colorrange=nothing, colorbar=true, aspect=:data,
     save=false, save_fname=nothing, new_window=false,
 )
     fp = HDF5.h5open(fname1, "r")
@@ -207,7 +207,7 @@ function plot3D_xsec(
     z = HDF5.read(fp, "z")
     if var == :Sa
         F = HDF5.read(fp, "Sa")
-        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+        isnothing(colormap) ? colormap = CMAP : nothing
     end
     HDF5.close(fp)
 
@@ -230,7 +230,7 @@ function plot3D_xsec_diff(
     xu=1, yu=1, zu=1,
     xcut=nothing, ycut=nothing, zcut=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
-    norm=true, colormap=:seismic, colorrange=nothing, colorbar=true, aspect=(1,1,1),
+    norm=true, colormap=CMAPDIV, colorrange=nothing, colorbar=true, aspect=(1,1,1),
     save=false, save_fname=nothing, new_window=false, guidelines=true,
 )
     fp = HDF5.h5open(fname1, "r")

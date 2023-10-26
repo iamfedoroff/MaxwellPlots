@@ -1,3 +1,7 @@
+const CMAP = mak.Reverse(:Hiroshige)
+const CMAPDIV = :seismic
+
+
 halfint(N) = iseven(N) ? div(N,2) : div(N,2)+1
 
 
@@ -89,7 +93,7 @@ end
 
 function plot_geometry(
     x, z, geometry;
-    xu=1, zu=1, cmap=mak.Reverse(:Hiroshige), aspect=1,
+    xu=1, zu=1, cmap=CMAP, aspect=1,
     smooth_interfaces=false, new_window=false,
 )
     if typeof(geometry) <: Function
@@ -127,7 +131,7 @@ end
 
 function plot_geometry(
     x, y, z, geometry;
-    xu=1, yu=1, zu=1, cmap=mak.Reverse(:Hiroshige), aspect=:data,
+    xu=1, yu=1, zu=1, cmap=CMAP, aspect=:data,
     smooth_interfaces=false, new_window=false, algorithm=:iso, isovalue=1, absorption=1,
 )
     if typeof(geometry) <: Function

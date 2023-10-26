@@ -1,6 +1,6 @@
 function plot1D(
     fname, svar;
-    zu=1, tu=1, vmin=-1, vmax=1, norm=false, cmap=:seismic, new_window=false, save=false,
+    zu=1, tu=1, vmin=-1, vmax=1, norm=false, cmap=CMAPDIV, new_window=false, save=false,
 )
     fp = HDF5.h5open(fname, "r")
     z = HDF5.read(fp, "z")

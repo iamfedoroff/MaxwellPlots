@@ -1,6 +1,6 @@
 function plot2D(
     fname, svar, t0;
-    xu=1, zu=1, tu=1, vmin=-1, vmax=1, norm=false, cmap=:seismic, aspect=1,
+    xu=1, zu=1, tu=1, vmin=-1, vmax=1, norm=false, cmap=CMAPDIV, aspect=1,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
@@ -41,7 +41,7 @@ function inspect2D(
     fname, svar;
     xu=1, zu=1, tu=1, vmin=-1, vmax=1, norm=false,
     xlims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=:seismic, aspect=1,
+    cmap=CMAPDIV, aspect=1,
     movie=false,
 )
     fp = HDF5.h5open(fname, "r")
@@ -150,7 +150,7 @@ function inspect2D_poynting(
     fname;
     xu=1, zu=1, tu=1, vmin=0, vmax=1, norm=false,
     xlims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=mak.Reverse(:Hiroshige), aspect=1,
+    cmap=CMAP, aspect=1,
     movie=false,
 )
     fp = HDF5.h5open(fname, "r")
@@ -215,7 +215,7 @@ end
 function plot2D_poynting_averaged(
     fname; xu=1, zu=1, vmin=0, vmax=1, norm=false, norm_point=nothing, aspect=1,
     xlims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=mak.Reverse(:Hiroshige),
+    cmap=CMAP,
     new_window=false, save=false,
 )
     fp = HDF5.h5open(fname, "r")

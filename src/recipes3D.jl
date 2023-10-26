@@ -30,12 +30,12 @@ function inspect(
     isnothing(vmax) ? vmax = maximum(F) : nothing
     colorrange = (vmin, vmax)
     if vmin * vmax < 0
-        isnothing(colormap) ? colormap = :seismic : nothing
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
         colormap = mak.to_colormap(colormap)
         Nmid = halfint(length(colormap))
         @. colormap[Nmid-1:Nmid+1] = mak.RGBAf(0,0,0,0)
     else
-        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+        isnothing(colormap) ? colormap = CMAP : nothing
         colormap = mak.to_colormap(colormap)
         colormap[1] = mak.RGBAf(0,0,0,0)
     end
@@ -124,9 +124,9 @@ function inspect_xsec(
     isnothing(vmin) ? vmin = minimum(F) : nothing
     isnothing(vmax) ? vmax = maximum(F) : nothing
     if vmin * vmax < 0   # diverging colormap
-        isnothing(colormap) ? colormap = :seismic : nothing
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
     else
-        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+        isnothing(colormap) ? colormap = CMAP : nothing
     end
 
     isnothing(aspect) ? aspect = (Lx/Ly, Lx/Lz, Ly/Lz) : nothing
@@ -221,9 +221,11 @@ function inspect_volume(
     vmin, vmax = colorrange
     isnothing(vmin) ? vmin = minimum(F) : nothing
     isnothing(vmax) ? vmax = maximum(F) : nothing
-    colorrange = (vmin, vmax)
-
-    isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+    if vmin * vmax < 0   # diverging colormap
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
+    else
+        isnothing(colormap) ? colormap = CMAP : nothing
+    end
 
     fig = mak.Figure(resolution=(950,992), fontsize=14)
 
@@ -349,12 +351,12 @@ function plot_volume(
     isnothing(vmax) ? vmax = maximum(F) : nothing
     colorrange = (vmin, vmax)
     if vmin * vmax < 0
-        isnothing(colormap) ? colormap = :seismic : nothing
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
         colormap = mak.to_colormap(colormap)
         Nmid = halfint(length(colormap))
         @. colormap[Nmid-1:Nmid+1] = mak.RGBAf(0,0,0,0)
     else
-        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+        isnothing(colormap) ? colormap = CMAP : nothing
         colormap = mak.to_colormap(colormap)
         colormap[1] = mak.RGBAf(0,0,0,0)
     end
@@ -423,9 +425,9 @@ function plot_volume_xsec(
     isnothing(vmin) ? vmin = minimum(F) : nothing
     isnothing(vmax) ? vmax = maximum(F) : nothing
     if vmin * vmax < 0   # diverging colormap
-        isnothing(colormap) ? colormap = :seismic : nothing
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
     else
-        isnothing(colormap) ? colormap = mak.Reverse(:Hiroshige) : nothing
+        isnothing(colormap) ? colormap = CMAP : nothing
     end
 
     isnothing(aspect) ? aspect = (Lx/Ly, Lx/Lz, Ly/Lz) : nothing
