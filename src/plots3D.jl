@@ -22,6 +22,18 @@ function inspect3D(
         Ez = HDF5.read(fp, "fields/Ez")
         F = poynting(Hx, Hy, Hz, Ex, Ey, Ez)
         isnothing(colormap) ? colormap = CMAP : nothing
+    elseif var == :divE
+        Ex = HDF5.read(fp, "fields/Ex")
+        Ey = HDF5.read(fp, "fields/Ey")
+        Ez = HDF5.read(fp, "fields/Ez")
+        F = divergence(x, y, z, Ex, Ey, Ez)
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
+    elseif var == :divH
+        Hx = HDF5.read(fp, "fields/Hx")
+        Hy = HDF5.read(fp, "fields/Hy")
+        Hz = HDF5.read(fp, "fields/Hz")
+        F = divergence(x, y, z, Hx, Hy, Hz)
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
     else
         error("Wrong input varible " * string(var))
     end
@@ -285,4 +297,30 @@ function poynting(Hx, Hy, Hz, Ex, Ey, Ez)
     ndrange = size(S)
     poynting_kernel!(backend)(S, Hx, Hy, Hz, Ex, Ey, Ez; ndrange)
     return S
+end
+
+
+@kernel function divergence_kernel!(D, x, y, z, Fx, Fy, Fz)
+    dx, dy, dz = (c[2]-c[1] for c in (x, y, z))
+    Nx, Ny, Nz, Nt = size(D)
+    ix, iy, iz, it = @index(Global, NTuple)
+    @inbounds begin
+        ix == 1 ? ixm1 = Nx : ixm1 = ix - 1
+        iy == 1 ? iym1 = Ny : iym1 = iy - 1
+        iz == 1 ? izm1 = Nz : izm1 = iz - 1
+        ix == Nx ? ixp1 = 1 : ixp1 = ix + 1
+        iy == Ny ? iyp1 = 1 : iyp1 = iy + 1
+        iz == Nz ? izp1 = 1 : izp1 = iz + 1
+        dFx = (Fx[ixp1,iy,iz,it] - Fx[ixm1,iy,iz,it]) / (2*dx)
+        dFy = (Fy[ix,iyp1,iz,it] - Fx[ix,iym1,iz,it]) / (2*dy)
+        dFz = (Fz[ix,iy,izp1,it] - Fx[ix,iy,izm1,it]) / (2*dz)
+        D[ix,iy,iz,it] = dFx + dFy + dFz
+    end
+end
+function divergence(x, y, z, Fx, Fy, Fz)
+    D = similar(Fx)
+    backend = get_backend(D)
+    ndrange = size(D)
+    divergence_kernel!(backend)(D, x, y, z, Fx, Fy, Fz; ndrange)
+    return D
 end
