@@ -123,8 +123,10 @@ end
 
 
 function inspect3D_poynting_averaged(
-    fname; xu=1, yu=1, zu=1, colormap=mak.Reverse(:Hiroshige), colorrange=(0,1),
-    new_window=false, colorbar=true,
+    fname; xu=1, yu=1, zu=1,colormap=mak.Reverse(:Hiroshige), colorrange=(0,1), norm=true,
+    xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing), xcut=nothing,
+    ycut=nothing, zcut=nothing, new_window=false, colorbar=true, save=false,
+    save_fname=nothing,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
@@ -133,20 +135,24 @@ function inspect3D_poynting_averaged(
     F = HDF5.read(fp, "Sa")
     HDF5.close(fp)
 
-    Nx, Ny, Nz = size(F)
-    ix = iseven(Nx) ? div(Nx,2) : div(Nx,2)+1
-    iy = iseven(Ny) ? div(Ny,2) : div(Ny,2)+1
-    iz = iseven(Nz) ? div(Nz,2) : div(Nz,2)+1
-    Lx = x[end] - x[1]
-    Ly = y[end] - y[1]
-    Lz = z[end] - z[1]
-
     @. x = x / xu
     @. y = y / yu
     @. z = z / zu
 
+    x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
+
+    Nx, Ny, Nz = size(F)
+    isnothing(xcut) ? ix = halfint(Nx) : ix = argmin(abs.(x.-xcut))
+    isnothing(ycut) ? iy = halfint(Ny) : iy = argmin(abs.(y.-ycut))
+    isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
+    Lx = x[end] - x[1]
+    Ly = y[end] - y[1]
+    Lz = z[end] - z[1]
+
     @show extrema(F)
-    F .= F ./ maximum(F)
+    if norm
+        F .= F ./ maximum(F)
+    end
 
     # --------------------------------------------------------------------------------------
     fig = mak.Figure(resolution=(950,992), fontsize=14)
@@ -155,10 +161,8 @@ function inspect3D_poynting_averaged(
         fig[1,1]; perspectiveness=0, xlabel="x (μm)", ylabel="y (μm)", zlabel="z (μm)",
         aspect=(Lx/Lz,Ly/Lz,1),
     )
-    mak.xlims!(ax, (x[1],x[end]))
-    mak.ylims!(ax, (y[1],y[end]))
-    mak.zlims!(ax, (z[1],z[end]))
-    ax.title[] = @sprintf("%.3f μm  %.3f μm  %.3f μm", x[ix], y[iy], z[iz])
+    mak.limits!(ax, x[1], x[end], y[1], y[end], z[1], z[end])
+    ax.title[] = @sprintf("x=%.3f μm   y=%.3f μm   z=%.3f μm", x[ix], y[iy], z[iz])
 
     vol = mak.volumeslices!(
         ax, x, y, z, F; bbox_visible=false, colormap, colorrange,
@@ -167,38 +171,56 @@ function inspect3D_poynting_averaged(
     vol.update_xz[](iy)
     vol.update_xy[](iz)
 
+    # Spines for cut planes:
+    # color = :black
+    # linewidth = 0.7
+    # mak.lines!(ax, [x[1],x[end]], [y[iy-1],y[iy-1]], [z[iz+1],z[iz+1]]; color, linewidth)
+    # mak.lines!(ax, [x[ix-1],x[ix-1]], [y[1],y[end]], [z[iz+1],z[iz+1]]; color, linewidth)
+    # mak.lines!(ax, [x[ix-1],x[ix-1]], [y[iy-1],y[iy-1]], [z[1],z[end]]; color, linewidth)
+    # mak.lines!(ax, [x[1],x[end]], [y[iy],y[iy]], [z[end],z[end]]; color, linewidth)
+    # mak.lines!(ax, [x[ix],x[ix]], [y[1],y[end]], [z[end],z[end]]; color, linewidth)
+    # mak.hidedecorations!(ax)
+    # mak.hidespines!(ax)
+
     if colorbar
         mak.Colorbar(fig[1,2], vol.heatmap_xy[])
     end
 
-    # --------------------------------------------------------------------------------------
-    sg = mak.SliderGrid(
-        fig[2,1],
-        (label="x", range=1:length(x), startvalue=ix),
-        (label="y", range=1:length(y), startvalue=iy),
-        (label="z", range=1:length(z), startvalue=iz),
-    )
-    mak.on(sg.sliders[1].value) do i
-        ix = i
-        vol.update_yz[](ix)
-        ax.title[] = @sprintf("%.3f μm  %.3f μm  %.3f μm", x[ix], y[iy], z[iz])
-    end
-    mak.on(sg.sliders[2].value) do i
-        iy = i
-        vol.update_xz[](iy)
-        ax.title[] = @sprintf("%.3f μm  %.3f μm  %.3f μm", x[ix], y[iy], z[iz])
-    end
-    mak.on(sg.sliders[3].value) do i
-        iz = i
-        vol.update_xy[](iz)
-        ax.title[] = @sprintf("%.3f μm  %.3f μm  %.3f μm", x[ix], y[iy], z[iz])
-    end
+    if save
+        if isnothing(save_fname)
+            ext = splitext(fname)[end]
+            save_fname = replace(fname, ext => ".png")
+        end
+        mak.save(save_fname, fig)
+    else
+        sg = mak.SliderGrid(
+            fig[2,1],
+            (label="x", range=1:length(x), startvalue=ix),
+            (label="y", range=1:length(y), startvalue=iy),
+            (label="z", range=1:length(z), startvalue=iz),
+        )
+        mak.on(sg.sliders[1].value) do i
+            ix = i
+            vol.update_yz[](ix)
+            ax.title[] = @sprintf("%.3f μm  %.3f μm  %.3f μm", x[ix], y[iy], z[iz])
+        end
+        mak.on(sg.sliders[2].value) do i
+            iy = i
+            vol.update_xz[](iy)
+            ax.title[] = @sprintf("%.3f μm  %.3f μm  %.3f μm", x[ix], y[iy], z[iz])
+        end
+        mak.on(sg.sliders[3].value) do i
+            iz = i
+            vol.update_xy[](iz)
+            ax.title[] = @sprintf("%.3f μm  %.3f μm  %.3f μm", x[ix], y[iy], z[iz])
+        end
 
-    # hmaps = [vol.heatmap_yz[], vol.heatmap_xz[], vol.heatmap_xy[]]
-    # toggles = [mak.Toggle(sg.layout[i,4], active=true) for i in 1:length(hmaps)]
-    # map(zip(hmaps, toggles)) do (h, t)
-    #     mak.connect!(h.visible, t.active)
-    # end
+        # hmaps = [vol.heatmap_yz[], vol.heatmap_xz[], vol.heatmap_xy[]]
+        # toggles = [mak.Toggle(sg.layout[i,4], active=true) for i in 1:length(hmaps)]
+        # map(zip(hmaps, toggles)) do (h, t)
+        #     mak.connect!(h.visible, t.active)
+        # end
+    end
 
     if new_window
         mak.display(mak.Screen(), fig)

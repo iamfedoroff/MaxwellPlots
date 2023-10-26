@@ -1,3 +1,6 @@
+halfint(N) = iseven(N) ? div(N,2) : div(N,2)+1
+
+
 function space_units_string(xu)
     sxu = "arb. u."
     if xu == 1
@@ -33,6 +36,25 @@ function time_units_string(tu)
         stu = "as"
     end
     return stu
+end
+
+
+function apply_limits(
+    x, y, z, F; xlims=(nothing,nothing), ylims=(nothing,nothing), zlims=(nothing,nothing),
+)
+    xmin, xmax = xlims
+    ymin, ymax = ylims
+    zmin, zmax = zlims
+    isnothing(xmin) ? xmin=x[1] : nothing
+    isnothing(xmax) ? xmax=x[end] : nothing
+    isnothing(ymin) ? ymin=y[1] : nothing
+    isnothing(ymax) ? ymax=y[end] : nothing
+    isnothing(zmin) ? zmin=z[1] : nothing
+    isnothing(zmax) ? zmax=z[end] : nothing
+    ix1, ix2 = argmin(abs.(x.-xmin)), argmin(abs.(x.-xmax))
+    iy1, iy2 = argmin(abs.(y.-ymin)), argmin(abs.(y.-ymax))
+    iz1, iz2 = argmin(abs.(z.-zmin)), argmin(abs.(z.-zmax))
+    return x[ix1:ix2], y[iy1:iy2], z[iz1:iz2], F[ix1:ix2,iy1:iy2,iz1:iz2]
 end
 
 
