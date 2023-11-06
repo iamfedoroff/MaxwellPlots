@@ -1,12 +1,13 @@
 function plot2D(
-    fname, svar, t0;
-    xu=1, zu=1, tu=1, vmin=-1, vmax=1, norm=false, cmap=CMAPDIV, aspect=1,
+    fname, var, t0;
+    xu=1, zu=1, tu=1, norm=true, colormap=nothing, colorrange=nothing, aspect=1,
+    new_window=false,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
     t = HDF5.read(fp, "fields/t")
-    F = HDF5.read(fp, "fields/"*svar)
+    F = HDF5.read(fp, "fields/" * string(var))
     HDF5.close(fp)
 
     @. x = x / xu
@@ -19,36 +20,59 @@ function plot2D(
     @show extrema(F)
     if norm
         F .= F ./ maximum(F)
+    end
+
+    isnothing(colorrange) ? colorrange = (minimum(F), maximum(F)) : nothing
+    vmin, vmax = colorrange
+    isnothing(vmin) ? vmin = minimum(F) : nothing
+    isnothing(vmax) ? vmax = maximum(F) : nothing
+    if vmin * vmax < 0   # diverging colormap
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
+    else
+        isnothing(colormap) ? colormap = CMAP : nothing
     end
 
     it = argmin(abs.(t .- t0))
 
     fig = mak.Figure(resolution=(950,992), fontsize=14)
     ax = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="z ($szu)", aspect)
-    mak.display(fig)
 
     hm = mak.heatmap!(
-        ax, x, z, F[:,:,it]; colormap=cmap, colorrange=(vmin,vmax),
+        ax, x, z, F[:,:,it]; colormap, colorrange=(vmin,vmax),
     )
-    mak.Colorbar(fig[2,1], hm; vertical=false, label=svar, flipaxis=false)
+    mak.Colorbar(fig[2,1], hm; vertical=false, label=string(var), flipaxis=false)
     ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
 
+    if new_window
+        mak.display(mak.Screen(), fig)
+    else
+        mak.display(fig)
+    end
     return nothing
 end
 
 
 function inspect2D(
-    fname, svar;
-    xu=1, zu=1, tu=1, vmin=-1, vmax=1, norm=false,
-    xlims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=CMAPDIV, aspect=1,
-    movie=false,
+    fname, var;
+    xu=1, zu=1, tu=1, xlims=(nothing,nothing), zlims=(nothing,nothing), norm=true,
+    colormap=nothing, colorrange=nothing, aspect=1, movie=false,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
     t = HDF5.read(fp, "fields/t")
-    F = HDF5.read(fp, "fields/"*svar)
+    if var in (:Ex, :Ez, :Hy)
+        F = HDF5.read(fp, "fields/" * string(var))
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
+    elseif var == :poynting
+        Hy = HDF5.read(fp, "fields/Hy")
+        Ex = HDF5.read(fp, "fields/Ex")
+        Ez = HDF5.read(fp, "fields/Ez")
+        F = poynting(Hy, Ex, Ez)
+        isnothing(colormap) ? colormap = CMAP : nothing
+    else
+        error("Wrong input varible " * string(var))
+    end
     HDF5.close(fp)
 
     @. x = x / xu
@@ -62,6 +86,11 @@ function inspect2D(
     if norm
         F .= F ./ maximum(F)
     end
+
+    isnothing(colorrange) ? colorrange = (minimum(F), maximum(F)) : nothing
+    vmin, vmax = colorrange
+    isnothing(vmin) ? vmin = minimum(F) : nothing
+    isnothing(vmax) ? vmax = maximum(F) : nothing
 
     isnothing(xlims[1]) ? xmin=x[1] : xmin=xlims[1]
     isnothing(xlims[2]) ? xmax=x[end] : xmax=xlims[2]
@@ -75,10 +104,8 @@ function inspect2D(
     mak.display(fig)
 
     it = 1
-    hm = mak.heatmap!(
-        ax, x, z, F[:,:,it]; colormap=cmap, colorrange=(vmin,vmax),
-    )
-    mak.Colorbar(fig[2,1], hm; vertical=false, label=svar, flipaxis=false)
+    hm = mak.heatmap!(ax, x, z, F[:,:,it]; colormap, colorrange)
+    mak.Colorbar(fig[2,1], hm; vertical=false, label=string(var), flipaxis=false)
     ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
 
     if movie
@@ -100,13 +127,13 @@ end
 
 
 function inspect2D_xsec(
-    fname, svar, x0, z0; xu=1, zu=1, tu=1, vmin=-1, vmax=1, norm=false,
+    fname, var, x0, z0; xu=1, zu=1, tu=1, vmin=-1, vmax=1, norm=true,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
     t = HDF5.read(fp, "fields/t")
-    F = HDF5.read(fp, "fields/"*svar)
+    F = HDF5.read(fp, "fields/" * string(var))
     HDF5.close(fp)
 
     @. x = x / xu
@@ -125,8 +152,8 @@ function inspect2D_xsec(
     iz0 = argmin(abs.(z .- z0))
 
     fig = mak.Figure(resolution=(950,992), fontsize=14)
-    ax1 = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel=svar)
-    ax2 = mak.Axis(fig[2,1]; xlabel="z ($szu)", ylabel=svar)
+    ax1 = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel=string(var))
+    ax2 = mak.Axis(fig[2,1]; xlabel="z ($szu)", ylabel=string(var))
     mak.display(fig)
 
     it = 1
@@ -141,72 +168,6 @@ function inspect2D_xsec(
         line1[2] = F[:,iz0,it]
         line2[2] = F[ix0,:,it]
         ax1.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
-    end
-    return nothing
-end
-
-
-function inspect2D_poynting(
-    fname;
-    xu=1, zu=1, tu=1, vmin=0, vmax=1, norm=false,
-    xlims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=CMAP, aspect=1,
-    movie=false,
-)
-    fp = HDF5.h5open(fname, "r")
-    x = HDF5.read(fp, "x")
-    z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "fields/t")
-    Hy = HDF5.read(fp, "fields/Hy")
-    Ex = HDF5.read(fp, "fields/Ex")
-    Ez = HDF5.read(fp, "fields/Ez")
-    HDF5.close(fp)
-
-    F = @. sqrt((-Ez*Hy)^2 + (Ex*Hy)^2)
-
-    @show extrema(F)
-    if norm
-        F .= F ./ maximum(F)
-    end
-
-    @. x = x / xu
-    @. z = z / zu
-    @. t = t / tu
-    sxu = space_units_string(xu)
-    szu = space_units_string(zu)
-    stu = time_units_string(tu)
-
-    isnothing(xlims[1]) ? xmin=x[1] : xmin=xlims[1]
-    isnothing(xlims[2]) ? xmax=x[end] : xmax=xlims[2]
-    isnothing(zlims[1]) ? zmin=z[1] : zmin=zlims[1]
-    isnothing(zlims[2]) ? zmax=z[end] : zmax=zlims[2]
-
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
-    ax = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="z ($szu)", aspect)
-    mak.xlims!(ax, (xmin,xmax))
-    mak.ylims!(ax, (zmin,zmax))
-    mak.display(fig)
-
-    it = 1
-    hm = mak.heatmap!(
-        ax, x, z, F[:,:,it]; colormap=cmap, colorrange=(vmin,vmax),
-    )
-    mak.Colorbar(fig[2,1], hm; vertical=false, label="|S|")
-    ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
-
-    if movie
-        ext = splitext(fname)[end]
-        fname_movie = replace(fname, ext => ".mp4")
-        mak.record(fig, fname_movie, 1:length(t); framerate=12) do it
-            hm[3] = F[:,:,it]
-            ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
-        end
-    else
-        sg = mak.SliderGrid(fig[3,1], (label="Time", range=1:length(t), startvalue=1))
-        mak.on(sg.sliders[1].value) do it
-            hm[3] = F[:,:,it]
-            ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
-        end
     end
     return nothing
 end
@@ -264,4 +225,10 @@ function plot2D_poynting_averaged(
         mak.save(fname_fig, fig)
     end
     return nothing
+end
+
+
+# ******************************************************************************************
+function poynting(Hy, Ex, Ez)
+    return @. sqrt((-Ez * Hy)^2 + (Ex * Hy)^2)
 end
