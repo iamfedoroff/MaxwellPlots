@@ -29,7 +29,7 @@ function plot1D(
         isnothing(colormap) ? colormap = CMAP : nothing
     end
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
     ax = mak.Axis(fig[1,1]; xlabel="t ($stu)", ylabel="z ($szu)")
 
     hm = mak.heatmap!(ax, t, z, transpose(F); colormap, colorrange)
@@ -69,7 +69,7 @@ function inspect1D(fname, var; zu=1, tu=1, vmin=-1, vmax=1, norm=true, new_windo
         F .= F ./ maximum(F)
     end
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
     ax = mak.Axis(fig[1,1]; xlabel="z ($szu)", ylabel=string(var))
 
     it = 1

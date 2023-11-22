@@ -204,7 +204,7 @@ function plot_viewpoints_polarization(
 
     tones = ones(length(t))
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
     ax = mak.Axis3(fig[1,1]; perspectiveness=0, xlabel="t ($stu)", ylabel=C2, zlabel=C1)
     mak.xlims!(ax, (xmin,xmax))
     mak.ylims!(ax, (ymin,ymax))

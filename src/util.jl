@@ -112,7 +112,7 @@ function plot_geometry(
     sxu = space_units_string(xu)
     szu = space_units_string(zu)
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
     if new_window
         mak.display(mak.Screen(), fig)
     end
@@ -152,7 +152,7 @@ function plot_geometry(
     syu = space_units_string(yu)
     szu = space_units_string(zu)
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
     if new_window
         mak.display(mak.Screen(), fig)
     end
@@ -169,17 +169,18 @@ end
 
 
 function plot_waveform(model; tu=1)
-    (; field, source, t) = model
-    (; waveform, p, icomp) = source
+    (; field, sources, t) = model
+    (; waveform, p, icomp) = sources[1]
 
     tt = t / tu
     stu = time_units_string(tu)
 
     component = fieldnames(typeof(field))[icomp]
 
-    F = @. waveform(t, (p,))
+    # F = @. waveform(0, 0, 0, t, (p,))
+    F = @. waveform(0, 0, 0, t)
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
     mak.display(mak.Screen(), fig)
     ax = mak.Axis(fig[1,1]; xlabel="t ($stu)", ylabel=string(component))
     mak.lines!(ax, tt, F)

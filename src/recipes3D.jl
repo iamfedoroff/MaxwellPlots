@@ -40,7 +40,7 @@ function inspect(
         colormap[1] = mak.RGBAf(0,0,0,0)
     end
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
 
     ax = mak.Axis3(
         fig[1,1];
@@ -134,7 +134,7 @@ function inspect_xsec(
     isnothing(aspect[2]) ? aspect[2] = Lx/Lz : nothing
     isnothing(aspect[3]) ? aspect[3] = Ly/Lz : nothing
 
-    fig = mak.Figure(resolution=(1600,600), fontsize=14)
+    fig = mak.Figure(size=(1600,600))
     ax1 = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="y ($syu)", aspect=aspect[1])
     ax2 = mak.Axis(fig[1,2]; xlabel="x ($sxu)", ylabel="z ($szu)", aspect=aspect[2])
     ax3 = mak.Axis(fig[1,3]; xlabel="y ($syu)", ylabel="z ($szu)", aspect=aspect[3])
@@ -227,7 +227,7 @@ function inspect_volume(
         isnothing(colormap) ? colormap = CMAP : nothing
     end
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
 
     ax = mak.Axis3(
         fig[1,1]; xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)", aspect,
@@ -361,7 +361,7 @@ function plot_volume(
         colormap[1] = mak.RGBAf(0,0,0,0)
     end
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
 
     ax = mak.Axis3(
         fig[1,1]; xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)", aspect,
@@ -435,7 +435,7 @@ function plot_volume_xsec(
     isnothing(aspect[2]) ? aspect[2] = Lx/Lz : nothing
     isnothing(aspect[3]) ? aspect[3] = Ly/Lz : nothing
 
-    fig = mak.Figure(resolution=(1600,600), fontsize=14)
+    fig = mak.Figure(size=(1600,600))
     ax1 = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="y ($syu)", aspect=aspect[1])
     ax2 = mak.Axis(fig[1,2]; xlabel="x ($sxu)", ylabel="z ($szu)", aspect=aspect[2])
     ax3 = mak.Axis(fig[1,3]; xlabel="y ($syu)", ylabel="z ($szu)", aspect=aspect[3])

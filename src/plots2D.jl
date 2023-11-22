@@ -34,7 +34,7 @@ function plot2D(
 
     it = argmin(abs.(t .- t0))
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
     ax = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="z ($szu)", aspect)
 
     hm = mak.heatmap!(
@@ -97,7 +97,7 @@ function inspect2D(
     isnothing(zlims[1]) ? zmin=z[1] : zmin=zlims[1]
     isnothing(zlims[2]) ? zmax=z[end] : zmax=zlims[2]
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
     ax = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="z ($szu)", aspect)
     mak.xlims!(ax, (xmin,xmax))
     mak.ylims!(ax, (zmin,zmax))
@@ -151,7 +151,7 @@ function inspect2D_xsec(
     ix0 = argmin(abs.(x .- x0))
     iz0 = argmin(abs.(z .- z0))
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
     ax1 = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel=string(var))
     ax2 = mak.Axis(fig[2,1]; xlabel="z ($szu)", ylabel=string(var))
     mak.display(fig)
@@ -207,7 +207,7 @@ function plot2D_poynting_averaged(
     isnothing(zlims[1]) ? zmin=z[1] : zmin=zlims[1]
     isnothing(zlims[2]) ? zmax=z[end] : zmax=zlims[2]
 
-    fig = mak.Figure(resolution=(950,992), fontsize=14)
+    fig = mak.Figure(size=(950,992))
     if new_window
         mak.display(mak.Screen(), fig)
     end
