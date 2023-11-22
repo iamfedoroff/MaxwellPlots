@@ -1,5 +1,5 @@
 const CMAP = mak.Reverse(:Hiroshige)
-const CMAPDIV = :seismic
+const CMAPDIV = :bwr
 
 
 halfint(N) = iseven(N) ? div(N,2) : div(N,2)+1
