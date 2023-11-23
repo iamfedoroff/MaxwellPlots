@@ -5,7 +5,26 @@ const CMAPDIV = :bwr
 halfint(N) = iseven(N) ? div(N,2) : div(N,2)+1
 
 
-function space_units_string(xu)
+function space_units(x::AbstractArray)
+    return space_units(max(extrema(x)...))
+end
+
+
+function space_units(x)
+    if abs(x) < 1e-6
+        xu = 1e-9
+    elseif abs(x) < 1e-3
+        xu = 1e-6
+    elseif abs(x) < 1
+        xu = 1e-3
+    else
+        xu = 1.0
+    end
+    return xu
+end
+
+
+function space_units_name(xu)
     sxu = "arb. u."
     if xu == 1
         sxu = "m"
@@ -22,7 +41,30 @@ function space_units_string(xu)
 end
 
 
-function time_units_string(tu)
+function time_units(t::AbstractArray)
+    return time_units(max(extrema(t)...))
+end
+
+
+function time_units(t)
+    if abs(t) < 1e-12
+        tu = 1e-15
+    elseif abs(t) < 1e-9
+        tu = 1e-12
+    elseif abs(t) < 1e-6
+        tu = 1e-9
+    elseif abs(t) < 1e-3
+        tu = 1e-6
+    elseif abs(t) < 1
+        tu = 1e-3
+    else
+        tu = 1.0
+    end
+    return tu
+end
+
+
+function time_units_name(tu)
     stu = "arb. u."
     if tu == 1
         stu = "s"
@@ -93,7 +135,7 @@ end
 
 function plot_geometry(
     x, z, geometry;
-    xu=1, zu=1, cmap=CMAP, aspect=1,
+    xu=nothing, zu=nothing, cmap=CMAP, aspect=1,
     smooth_interfaces=false, new_window=false,
 )
     if typeof(geometry) <: Function
@@ -107,10 +149,13 @@ function plot_geometry(
         F = moving_average(F, 2)
     end
 
+    isnothing(xu) ? xu = space_units(x) : nothing
+    isnothing(zu) ? zu = space_units(z) : nothing
+    sxu = space_units_name(xu)
+    szu = space_units_name(zu)
+
     xx = x / xu
     zz = z / zu
-    sxu = space_units_string(xu)
-    szu = space_units_string(zu)
 
     fig = mak.Figure(size=(950,992))
     if new_window
@@ -131,7 +176,7 @@ end
 
 function plot_geometry(
     x, y, z, geometry;
-    xu=1, yu=1, zu=1, cmap=CMAP, aspect=:data,
+    xu=nothing, yu=nothing, zu=nothing, cmap=CMAP, aspect=:data,
     smooth_interfaces=false, new_window=false, algorithm=:iso, isovalue=1, absorption=1,
 )
     if typeof(geometry) <: Function
@@ -145,12 +190,16 @@ function plot_geometry(
         F = moving_average(F, 2)
     end
 
+    isnothing(xu) ? xu = space_units(x) : nothing
+    isnothing(yu) ? yu = space_units(y) : nothing
+    isnothing(zu) ? zu = space_units(z) : nothing
+    sxu = space_units_name(xu)
+    syu = space_units_name(yu)
+    szu = space_units_name(zu)
+
     xx = x / xu
     yy = y / yu
     zz = z / zu
-    sxu = space_units_string(xu)
-    syu = space_units_string(yu)
-    szu = space_units_string(zu)
 
     fig = mak.Figure(size=(950,992))
     if new_window
@@ -172,8 +221,10 @@ function plot_waveform(model; tu=1)
     (; field, sources, t) = model
     (; waveform, p, icomp) = sources[1]
 
+    isnothing(tu) ? tu = time_units(t) : nothing
+    stu = time_units_name(tu)
+
     tt = t / tu
-    stu = time_units_string(tu)
 
     component = fieldnames(typeof(field))[icomp]
 

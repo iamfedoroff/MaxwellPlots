@@ -1,7 +1,7 @@
 function plot2D(
     fname, var, t0;
-    xu=1, zu=1, tu=1, norm=true, colormap=nothing, colorrange=nothing, aspect=1,
-    new_window=false,
+    xu=nothing, zu=nothing, tu=nothing, norm=true, colormap=nothing, colorrange=nothing,
+    aspect=1, new_window=false,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
@@ -10,12 +10,18 @@ function plot2D(
     F = HDF5.read(fp, "fields/" * string(var))
     HDF5.close(fp)
 
+    it = argmin(abs.(t .- t0))
+
+    isnothing(xu) ? xu = space_units(x) : nothing
+    isnothing(zu) ? zu = space_units(z) : nothing
+    isnothing(tu) ? tu = time_units(t) : nothing
+    sxu = space_units_name(xu)
+    szu = space_units_name(zu)
+    stu = time_units_name(tu)
+
     @. x = x / xu
     @. z = z / zu
     @. t = t / tu
-    sxu = space_units_string(xu)
-    szu = space_units_string(zu)
-    stu = time_units_string(tu)
 
     @show extrema(F)
     if norm
@@ -31,8 +37,6 @@ function plot2D(
     else
         isnothing(colormap) ? colormap = CMAP : nothing
     end
-
-    it = argmin(abs.(t .- t0))
 
     fig = mak.Figure(size=(950,992))
     ax = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="z ($szu)", aspect)
@@ -54,8 +58,8 @@ end
 
 function inspect2D(
     fname, var;
-    xu=1, zu=1, tu=1, xlims=(nothing,nothing), zlims=(nothing,nothing), norm=true,
-    colormap=nothing, colorrange=nothing, aspect=1, movie=false,
+    xu=nothing, zu=nothing, tu=nothing, xlims=(nothing,nothing), zlims=(nothing,nothing),
+    norm=true, colormap=nothing, colorrange=nothing, aspect=1, movie=false,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
@@ -75,12 +79,16 @@ function inspect2D(
     end
     HDF5.close(fp)
 
+    isnothing(xu) ? xu = space_units(x) : nothing
+    isnothing(zu) ? zu = space_units(z) : nothing
+    isnothing(tu) ? tu = time_units(t) : nothing
+    sxu = space_units_name(xu)
+    szu = space_units_name(zu)
+    stu = time_units_name(tu)
+
     @. x = x / xu
     @. z = z / zu
     @. t = t / tu
-    sxu = space_units_string(xu)
-    szu = space_units_string(zu)
-    stu = time_units_string(tu)
 
     @show extrema(F)
     if norm
@@ -127,7 +135,7 @@ end
 
 
 function inspect2D_xsec(
-    fname, var, x0, z0; xu=1, zu=1, tu=1, vmin=-1, vmax=1, norm=true,
+    fname, var, x0, z0; xu=nothing, zu=nothing, tu=nothing, vmin=-1, vmax=1, norm=true,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
@@ -136,20 +144,24 @@ function inspect2D_xsec(
     F = HDF5.read(fp, "fields/" * string(var))
     HDF5.close(fp)
 
+    ix0 = argmin(abs.(x .- x0))
+    iz0 = argmin(abs.(z .- z0))
+
+    isnothing(xu) ? xu = space_units(x) : nothing
+    isnothing(zu) ? zu = space_units(z) : nothing
+    isnothing(tu) ? tu = time_units(t) : nothing
+    sxu = space_units_name(xu)
+    szu = space_units_name(zu)
+    stu = time_units_name(tu)
+
     @. x = x / xu
     @. z = z / zu
     @. t = t / tu
-    sxu = space_units_string(xu)
-    szu = space_units_string(zu)
-    stu = time_units_string(tu)
 
     @show extrema(F)
     if norm
         F .= F ./ maximum(F)
     end
-
-    ix0 = argmin(abs.(x .- x0))
-    iz0 = argmin(abs.(z .- z0))
 
     fig = mak.Figure(size=(950,992))
     ax1 = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel=string(var))
@@ -174,7 +186,7 @@ end
 
 
 function plot2D_poynting_averaged(
-    fname; xu=1, zu=1, vmin=0, vmax=1, norm=false, norm_point=nothing, aspect=1,
+    fname; xu=nothing, zu=nothing, vmin=0, vmax=1, norm=false, norm_point=nothing, aspect=1,
     xlims=(nothing,nothing), zlims=(nothing,nothing),
     cmap=CMAP,
     new_window=false, save=false,
@@ -185,10 +197,13 @@ function plot2D_poynting_averaged(
     F = HDF5.read(fp, "Sa")
     HDF5.close(fp)
 
+    isnothing(xu) ? xu = space_units(x) : nothing
+    isnothing(zu) ? zu = space_units(z) : nothing
+    sxu = space_units_name(xu)
+    szu = space_units_name(zu)
+
     @. x = x / xu
     @. z = z / zu
-    sxu = space_units_string(xu)
-    szu = space_units_string(zu)
 
     @show extrema(F)
     if norm

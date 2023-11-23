@@ -1,6 +1,6 @@
 function plot1D(
     fname, var;
-    zu=1, tu=1, norm=true, colormap=nothing, colorrange=nothing, save=false,
+    zu=nothing, tu=nothing, norm=true, colormap=nothing, colorrange=nothing, save=false,
     save_fname=nothing, new_window=false,
 )
     fp = HDF5.h5open(fname, "r")
@@ -9,10 +9,13 @@ function plot1D(
     F = HDF5.read(fp, "fields/" * string(var))
     HDF5.close(fp)
 
+    isnothing(zu) ? zu = space_units(z) : nothing
+    isnothing(tu) ? tu = time_units(t) : nothing
+    szu = space_units_name(zu)
+    stu = time_units_name(tu)
+
     @. z = z / zu
     @. t = t / tu
-    szu = space_units_string(zu)
-    stu = time_units_string(tu)
 
     @show extrema(F)
     if norm
@@ -52,17 +55,22 @@ function plot1D(
 end
 
 
-function inspect1D(fname, var; zu=1, tu=1, vmin=-1, vmax=1, norm=true, new_window=false)
+function inspect1D(
+    fname, var; zu=nothing, tu=nothing, vmin=-1, vmax=1, norm=true, new_window=false,
+)
     fp = HDF5.h5open(fname, "r")
     z = HDF5.read(fp, "z")
     t = HDF5.read(fp, "fields/t")
     F = HDF5.read(fp, "fields/" * string(var))
     HDF5.close(fp)
 
+    isnothing(zu) ? zu = space_units(z) : nothing
+    isnothing(tu) ? tu = time_units(t) : nothing
+    szu = space_units_name(zu)
+    stu = time_units_name(tu)
+
     @. z = z / zu
     @. t = t / tu
-    szu = space_units_string(zu)
-    stu = time_units_string(tu)
 
     @show extrema(F)
     if norm

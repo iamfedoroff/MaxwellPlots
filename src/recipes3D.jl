@@ -1,20 +1,25 @@
 function inspect(
     x, y, z, t, F;
-    xu=1, yu=1, zu=1, tu=1,
+    xu=nothing, yu=nothing, zu=nothing, tu=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing, tlims=nothing,
     norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
     movie=false, movie_fname="movie.mp4", new_window=false,
 )
+    x, y, z, t, F = apply_limits(x, y, z, t, F; xlims, ylims, zlims, tlims)
+
+    isnothing(xu) ? xu = space_units(x) : nothing
+    isnothing(yu) ? yu = space_units(y) : nothing
+    isnothing(zu) ? zu = space_units(z) : nothing
+    isnothing(tu) ? tu = time_units(t) : nothing
+    sxu = space_units_name(xu)
+    syu = space_units_name(yu)
+    szu = space_units_name(zu)
+    stu = time_units_name(tu)
+
     @. x = x / xu
     @. y = y / yu
     @. z = z / zu
     @. t = t / tu
-    sxu = space_units_string(xu)
-    syu = space_units_string(yu)
-    szu = space_units_string(zu)
-    stu = time_units_string(tu)
-
-    x, y, z, t, F = apply_limits(x, y, z, t, F; xlims, ylims, zlims, tlims)
 
     it = 1
 
@@ -94,15 +99,6 @@ function inspect_xsec(
     norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=(1,1,1),
     movie=true, movie_fname="movie.mp4", new_window=false, guidelines=true,
 )
-    @. x = x / xu
-    @. y = y / yu
-    @. z = z / zu
-    @. t = t / tu
-    sxu = space_units_string(xu)
-    syu = space_units_string(yu)
-    szu = space_units_string(zu)
-    stu = time_units_string(tu)
-
     x, y, z, t, F = apply_limits(x, y, z, t, F; xlims, ylims, zlims, tlims)
 
     Nx, Ny, Nz, Nt = size(F)
@@ -110,6 +106,20 @@ function inspect_xsec(
     isnothing(ycut) ? iy = halfint(Ny) : iy = argmin(abs.(y.-ycut))
     isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
     Lx, Ly, Lz  = x[end]-x[1], y[end]-y[1], z[end]-z[1]
+
+    isnothing(xu) ? xu = space_units(x) : nothing
+    isnothing(yu) ? yu = space_units(y) : nothing
+    isnothing(zu) ? zu = space_units(z) : nothing
+    isnothing(tu) ? tu = time_units(t) : nothing
+    sxu = space_units_name(xu)
+    syu = space_units_name(yu)
+    szu = space_units_name(zu)
+    stu = time_units_name(tu)
+
+    @. x = x / xu
+    @. y = y / yu
+    @. z = z / zu
+    @. t = t / tu
 
     it = 1
 
@@ -191,25 +201,29 @@ end
 
 function inspect_volume(
     x, y, z, F;
-    xu=1, yu=1, zu=1,
+    xu=nothing, yu=nothing, zu=nothing,
     xcut=nothing, ycut=nothing, zcut=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
     norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
     save=false, save_fname="image.png", new_window=false,
 )
-    @. x = x / xu
-    @. y = y / yu
-    @. z = z / zu
-    sxu = space_units_string(xu)
-    syu = space_units_string(yu)
-    szu = space_units_string(zu)
-
     x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
 
     Nx, Ny, Nz = size(F)
     isnothing(xcut) ? ix = halfint(Nx) : ix = argmin(abs.(x.-xcut))
     isnothing(ycut) ? iy = halfint(Ny) : iy = argmin(abs.(y.-ycut))
     isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
+
+    isnothing(xu) ? xu = space_units(x) : nothing
+    isnothing(yu) ? yu = space_units(y) : nothing
+    isnothing(zu) ? zu = space_units(z) : nothing
+    sxu = space_units_name(xu)
+    syu = space_units_name(yu)
+    szu = space_units_name(zu)
+
+    @. x = x / xu
+    @. y = y / yu
+    @. z = z / zu
 
     @show extrema(F)
     if norm
@@ -325,19 +339,23 @@ end
 
 function plot_volume(
     x, y, z, F;
-    xu=1, yu=1, zu=1,
+    xu=nothing, yu=nothing, zu=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
     norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
     save=false, save_fname="image.png", new_window=false,
 )
+    x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
+
+    isnothing(xu) ? xu = space_units(x) : nothing
+    isnothing(yu) ? yu = space_units(y) : nothing
+    isnothing(zu) ? zu = space_units(z) : nothing
+    sxu = space_units_name(xu)
+    syu = space_units_name(yu)
+    szu = space_units_name(zu)
+
     @. x = x / xu
     @. y = y / yu
     @. z = z / zu
-    sxu = space_units_string(xu)
-    syu = space_units_string(yu)
-    szu = space_units_string(zu)
-
-    x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
 
     @show extrema(F)
     if norm
@@ -393,19 +411,12 @@ end
 
 function plot_volume_xsec(
     x, y, z, F;
-    xu=1, yu=1, zu=1,
+    xu=nothing, yu=nothing, zu=nothing,
     xcut=nothing, ycut=nothing, zcut=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
     norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=(1,1,1),
     save=false, save_fname="image.png", new_window=false, guidelines=true,
 )
-    @. x = x / xu
-    @. y = y / yu
-    @. z = z / zu
-    sxu = space_units_string(xu)
-    syu = space_units_string(yu)
-    szu = space_units_string(zu)
-
     x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
 
     Nx, Ny, Nz = size(F)
@@ -413,6 +424,17 @@ function plot_volume_xsec(
     isnothing(ycut) ? iy = halfint(Ny) : iy = argmin(abs.(y.-ycut))
     isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
     Lx, Ly, Lz  = x[end]-x[1], y[end]-y[1], z[end]-z[1]
+
+    isnothing(xu) ? xu = space_units(x) : nothing
+    isnothing(yu) ? yu = space_units(y) : nothing
+    isnothing(zu) ? zu = space_units(z) : nothing
+    sxu = space_units_name(xu)
+    syu = space_units_name(yu)
+    szu = space_units_name(zu)
+
+    @. x = x / xu
+    @. y = y / yu
+    @. z = z / zu
 
     @show extrema(F)
     if norm

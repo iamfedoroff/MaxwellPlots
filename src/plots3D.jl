@@ -1,6 +1,6 @@
 function inspect3D(
     fname, var;
-    xu=1, yu=1, zu=1, tu=1,
+    xu=nothing, yu=nothing, zu=nothing, tu=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing, tlims=nothing,
     norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
     movie=false, movie_fname=nothing, new_window=false,
@@ -55,7 +55,7 @@ end
 
 function inspect3D_xsec(
     fname, var;
-    xu=1, yu=1, zu=1, tu=1,
+    xu=nothing, yu=nothing, zu=nothing, tu=nothing,
     xcut=nothing, ycut=nothing, zcut=nothing, tlims=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
     norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=(1,1,1),
@@ -99,7 +99,7 @@ end
 
 function inspect3D_volume(
     fname, var;
-    xu=1, yu=1, zu=1,
+    xu=nothing, yu=nothing, zu=nothing,
     xcut=nothing, ycut=nothing, zcut=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
     norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
@@ -133,7 +133,7 @@ end
 
 function plot3D(
     fname, var;
-    xu=1, yu=1, zu=1,
+    xu=nothing, yu=nothing, zu=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
     norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
     save=false, save_fname=nothing, new_window=false,
@@ -164,7 +164,7 @@ end
 
 function plot3D_diff(
     fname1, fname2, var;
-    xu=1, yu=1, zu=1,
+    xu=nothing, yu=nothing, zu=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
     norm=true, colormap=CMAPDIV, colorrange=nothing, colorbar=true, aspect=:data,
     save=false, save_fname=nothing, new_window=false,
@@ -207,7 +207,7 @@ end
 
 function plot3D_xsec(
     fname, var;
-    xu=1, yu=1, zu=1,
+    xu=nothing, yu=nothing, zu=nothing,
     xcut=nothing, ycut=nothing, zcut=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
     norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=(1,1,1),
@@ -239,7 +239,7 @@ end
 
 function plot3D_xsec_diff(
     fname1, fname2, var;
-    xu=1, yu=1, zu=1,
+    xu=nothing, yu=nothing, zu=nothing,
     xcut=nothing, ycut=nothing, zcut=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
     norm=true, colormap=CMAPDIV, colorrange=nothing, colorbar=true, aspect=(1,1,1),

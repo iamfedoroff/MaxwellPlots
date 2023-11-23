@@ -1,6 +1,6 @@
 function plot_viewpoints(
     fname, svar, viewpoints; new_window=false, norm=false, xlims=nothing, ylims=nothing,
-    zu=1, tu=1, Fu=1, save=false,
+    zu=nothing, tu=nothing, Fu=1, save=false,
 )
     Np = length(viewpoints)
 
@@ -18,14 +18,17 @@ function plot_viewpoints(
         end
     end
 
+    z = HDF5.read(fp, "z")
     t = HDF5.read(group, "t")
 
-    szu = space_units_string(zu)
-    stu = time_units_string(tu)
+    isnothing(zu) ? zu = space_units(z) : nothing
+    isnothing(tu) ? tu = time_units(t) : nothing
+    szu = space_units_name(zu)
+    stu = time_units_name(tu)
 
     Enorm = 1
 
-    fig = mak.Figure()
+    fig = mak.Figure(size=(950,992))
     ax = mak.Axis(
         fig[1,1]; xlabel="t ($stu)", ylabel=svar, subtitle=basename(fname),
         limits=(xlims,ylims),
@@ -73,7 +76,7 @@ end
 
 function plot_viewpoints_spectrum(
     fname, svar, viewpoints; new_window=false, norm=true, xlims=nothing, ylims=nothing,
-    zu=1, wu=1, Fu=1, save=false, yscale=log10,
+    zu=nothing, wu=1, Fu=1, save=false, yscale=log10,
 )
     Np = length(viewpoints)
 
@@ -91,16 +94,19 @@ function plot_viewpoints_spectrum(
         end
     end
 
+    z = HDF5.read(fp, "z")
     t = HDF5.read(group, "t")
+
     Nt = length(t)
     dt = t[2] - t[1]
     w = 2*pi * FFTW.rfftfreq(Nt, 1/dt)
 
-    szu = space_units_string(zu)
+    isnothing(zu) ? zu = space_units(z) : nothing
+    szu = space_units_name(zu)
 
     Snorm = 1
 
-    fig = mak.Figure()
+    fig = mak.Figure(size=(950,992))
     ax = mak.Axis(
         fig[1,1];
         xlabel="Frequency w", ylabel="Spectrum of " * svar, subtitle=basename(fname),
@@ -154,7 +160,7 @@ end
 
 function plot_viewpoints_polarization(
     fname, C1, C2, viewpoints; new_window=false, tlims=nothing, Flims=(-1,1), save=false,
-    zu=1, tu=1,
+    zu=nothing, tu=nothing,
 )
     Np = length(viewpoints)
 
@@ -172,11 +178,16 @@ function plot_viewpoints_polarization(
         end
     end
 
-    szu = space_units_string(zu)
-    stu = time_units_string(tu)
-
+    z = HDF5.read(fp, "z")
     t = HDF5.read(group, "t")
+
+    isnothing(zu) ? zu = space_units(z) : nothing
+    isnothing(tu) ? tu = time_units(t) : nothing
+    szu = space_units_name(zu)
+    stu = time_units_name(tu)
+
     @. t = t / tu
+
     if isnothing(tlims)
         tmin, tmax = extrema(t)
     else
