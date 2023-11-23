@@ -185,16 +185,20 @@ function inspect2D_xsec(
 end
 
 
-function plot2D_poynting_averaged(
-    fname; xu=nothing, zu=nothing, vmin=0, vmax=1, norm=false, norm_point=nothing, aspect=1,
-    xlims=(nothing,nothing), zlims=(nothing,nothing),
-    cmap=CMAP,
-    new_window=false, save=false,
+function plot2D(
+    fname, var;
+    xu=nothing, zu=nothing, xlims=(nothing,nothing), zlims=(nothing,nothing), norm=true,
+    colormap=nothing, colorrange=nothing, aspect=1, save=false, save_fname="image.png",
+    new_window=false, colorbar=true,
 )
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
-    F = HDF5.read(fp, "Sa")
+    if string(var) in ("Sa", "rho_end")
+        F = HDF5.read(fp, string(var))
+    else
+        error("Unknown variable $(string(var))")
+    end
     HDF5.close(fp)
 
     isnothing(xu) ? xu = space_units(x) : nothing
@@ -207,14 +211,17 @@ function plot2D_poynting_averaged(
 
     @show extrema(F)
     if norm
-        if isnothing(norm_point)
-            F .= F ./ maximum(F)
-        else
-            xn, zn = norm_point
-            ixn = argmin(abs.(x .- xn))
-            izn = argmin(abs.(z .- zn))
-            @views F .= F ./ maximum(F[ixn,izn,:])
-        end
+        F .= F ./ maximum(F)
+    end
+
+    isnothing(colorrange) ? colorrange = extrema(F) : nothing
+    vmin, vmax = colorrange
+    isnothing(vmin) ? vmin = minimum(F) : nothing
+    isnothing(vmax) ? vmax = maximum(F) : nothing
+    if vmin * vmax < 0   # diverging colormap
+        isnothing(colormap) ? colormap = CMAPDIV : nothing
+    else
+        isnothing(colormap) ? colormap = CMAP : nothing
     end
 
     isnothing(xlims[1]) ? xmin=x[1] : xmin=xlims[1]
@@ -231,13 +238,14 @@ function plot2D_poynting_averaged(
     mak.ylims!(ax, (zmin,zmax))
     mak.display(fig)
 
-    hm = mak.heatmap!(ax, x, z, F; colormap=cmap, colorrange=(vmin,vmax))
-    mak.Colorbar(fig[2,1], hm; vertical=false, label="Time averaged |S|")
+    hm = mak.heatmap!(ax, x, z, F; colormap, colorrange)
+
+    if colorbar
+        mak.Colorbar(fig[2,1], hm; vertical=false, label=string(var), flipaxis=false)
+    end
 
     if save
-        ext = splitext(fname)[end]
-        fname_fig = replace(fname, ext => ".png")
-        mak.save(fname_fig, fig)
+        mak.save(save_fname, fig)
     end
     return nothing
 end

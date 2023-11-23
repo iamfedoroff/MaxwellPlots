@@ -10,10 +10,10 @@ function inspect3D(
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
     t = HDF5.read(fp, "fields/t")
-    if var in (:Ex, :Ey, :Ez, :Hx, :Hy, :Hz, :rho)
+    if string(var) in ("Ex", "Ey", "Ez", "Hx", "Hy", "Hz", "rho")
         F = HDF5.read(fp, "fields/" * string(var))
         isnothing(colormap) ? colormap = CMAPDIV : nothing
-    elseif var == :poynting
+    elseif string(var) == "poynting"
         Hx = HDF5.read(fp, "fields/Hx")
         Hy = HDF5.read(fp, "fields/Hy")
         Hz = HDF5.read(fp, "fields/Hz")
@@ -22,13 +22,13 @@ function inspect3D(
         Ez = HDF5.read(fp, "fields/Ez")
         F = poynting(Hx, Hy, Hz, Ex, Ey, Ez)
         isnothing(colormap) ? colormap = CMAP : nothing
-    elseif var == :divE
+    elseif string(var) == "divE"
         Ex = HDF5.read(fp, "fields/Ex")
         Ey = HDF5.read(fp, "fields/Ey")
         Ez = HDF5.read(fp, "fields/Ez")
         F = divergence(x, y, z, Ex, Ey, Ez)
         isnothing(colormap) ? colormap = CMAPDIV : nothing
-    elseif var == :divH
+    elseif string(var) == "divH"
         Hx = HDF5.read(fp, "fields/Hx")
         Hy = HDF5.read(fp, "fields/Hy")
         Hz = HDF5.read(fp, "fields/Hz")
@@ -66,10 +66,10 @@ function inspect3D_xsec(
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
     t = HDF5.read(fp, "fields/t")
-    if var in (:Ex, :Ey, :Ez, :Hx, :Hy, :Hz, :rho)
+    if string(var) in ("Ex", "Ey", "Ez", "Hx", "Hy", "Hz", "rho")
         F = HDF5.read(fp, "fields/" * string(var))
         isnothing(colormap) ? colormap = CMAPDIV : nothing
-    elseif var == :poynting
+    elseif string(var) == "poynting"
         Hx = HDF5.read(fp, "fields/Hx")
         Hy = HDF5.read(fp, "fields/Hy")
         Hz = HDF5.read(fp, "fields/Hz")
@@ -109,7 +109,7 @@ function inspect3D_volume(
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
-    if var in (:Sa, :rho_end)
+    if string(var) in ("Sa", "rho_end")
         F = HDF5.read(fp, string(var))
         isnothing(colormap) ? colormap = CMAP : nothing
     else
@@ -142,7 +142,7 @@ function plot3D(
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
-    if var in (:Sa, :rho_end)
+    if string(var) in ("Sa", "rho_end")
         F = HDF5.read(fp, string(var))
         isnothing(colormap) ? colormap = CMAP : nothing
     end
@@ -173,7 +173,7 @@ function plot3D_diff(
     x1 = HDF5.read(fp, "x")
     y1 = HDF5.read(fp, "y")
     z1 = HDF5.read(fp, "z")
-    if var in (:Sa, :rho_end)
+    if string(var) in ("Sa", "rho_end")
         F1 = HDF5.read(fp, string(var))
     end
     HDF5.close(fp)
@@ -182,7 +182,7 @@ function plot3D_diff(
     x2 = HDF5.read(fp, "x")
     y2 = HDF5.read(fp, "y")
     z2 = HDF5.read(fp, "z")
-    if var in (:Sa, :rho_end)
+    if string(var) in ("Sa", "rho_end")
         F2 = HDF5.read(fp, string(var))
     end
     HDF5.close(fp)
@@ -217,7 +217,7 @@ function plot3D_xsec(
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
-    if var in (:Sa, :rho_end)
+    if string(var) in ("Sa", "rho_end")
         F = HDF5.read(fp, string(var))
         isnothing(colormap) ? colormap = CMAP : nothing
     end
@@ -249,7 +249,7 @@ function plot3D_xsec_diff(
     x1 = HDF5.read(fp, "x")
     y1 = HDF5.read(fp, "y")
     z1 = HDF5.read(fp, "z")
-    if var in (:Sa, :rho_end)
+    if string(var) in ("Sa", "rho_end")
         F1 = HDF5.read(fp, string(var))
     end
     HDF5.close(fp)
@@ -258,7 +258,7 @@ function plot3D_xsec_diff(
     x2 = HDF5.read(fp, "x")
     y2 = HDF5.read(fp, "y")
     z2 = HDF5.read(fp, "z")
-    if var in (:Sa, :rho_end)
+    if string(var) in ("Sa", "rho_end")
         F2 = HDF5.read(fp, string(var))
     end
     HDF5.close(fp)

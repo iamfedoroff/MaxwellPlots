@@ -1,6 +1,6 @@
 function plot_viewpoints(
-    fname, svar, viewpoints; new_window=false, norm=false, xlims=nothing, ylims=nothing,
-    zu=nothing, tu=nothing, Fu=1, save=false,
+    fname, var, viewpoints; new_window=false, norm=true, xlims=nothing, ylims=nothing,
+    zu=nothing, tu=nothing, Fu=1, save=false, save_fname="image.png",
 )
     Np = length(viewpoints)
 
@@ -30,19 +30,18 @@ function plot_viewpoints(
 
     fig = mak.Figure(size=(950,992))
     ax = mak.Axis(
-        fig[1,1]; xlabel="t ($stu)", ylabel=svar, subtitle=basename(fname),
+        fig[1,1]; xlabel="t ($stu)", ylabel=string(var), subtitle=basename(fname),
         limits=(xlims,ylims),
     )
 
     for (n, pt) in enumerate(viewpoints)
         point = HDF5.read(group, "$pt/point")
-        Et = HDF5.read(group, "$pt/"*svar)
+        Et = HDF5.read(group, "$pt/"*string(var))
 
         if norm
-            # if n == 1
-            #     Enorm = maximum(Et)
-            # end
-            Enorm = maximum(Et)
+            if n == 1
+                Enorm = maximum(Et)
+            end
             @. Et = Et / Enorm
         else
             @. Et = Et / Fu
@@ -65,9 +64,7 @@ function plot_viewpoints(
     end
 
     if save
-        ext = splitext(fname)[end]
-        fname_fig = replace(fname, ext => ".png")
-        mak.save(fname_fig, fig)
+        mak.save(save_fname, fig)
     end
 
     return nothing
@@ -75,7 +72,7 @@ end
 
 
 function plot_viewpoints_spectrum(
-    fname, svar, viewpoints; new_window=false, norm=true, xlims=nothing, ylims=nothing,
+    fname, var, viewpoints; new_window=false, norm=true, xlims=nothing, ylims=nothing,
     zu=nothing, wu=1, Fu=1, save=false, yscale=log10,
 )
     Np = length(viewpoints)
@@ -109,13 +106,13 @@ function plot_viewpoints_spectrum(
     fig = mak.Figure(size=(950,992))
     ax = mak.Axis(
         fig[1,1];
-        xlabel="Frequency w", ylabel="Spectrum of " * svar, subtitle=basename(fname),
+        xlabel="Frequency w", ylabel="Spectrum of " * string(var), subtitle=basename(fname),
         limits=(xlims,ylims), yscale,
     )
 
     for (n, pt) in enumerate(viewpoints)
         point = HDF5.read(group, "$pt/point")
-        Et = HDF5.read(group, "$pt/"*svar)
+        Et = HDF5.read(group, "$pt/"*string(var))
 
         Ew = FFTW.rfft(Et)
         Sw = @. abs2(Ew)
@@ -159,8 +156,9 @@ end
 
 
 function plot_viewpoints_polarization(
-    fname, C1, C2, viewpoints; new_window=false, tlims=nothing, Flims=(-1,1), save=false,
-    zu=nothing, tu=nothing,
+    fname, var1, var2, viewpoints;
+    zu=nothing, tu=nothing, tlims=nothing, Flims=(-1,1), save=false, save_fname="image.png",
+    new_window=false,
 )
     Np = length(viewpoints)
 
@@ -199,8 +197,8 @@ function plot_viewpoints_polarization(
     # read data to find the normalization factor:
     Enorm = 0
     for pt in viewpoints
-        Ex = HDF5.read(group, string(pt) * "/" * C1)
-        Ey = HDF5.read(group, string(pt) * "/" * C2)
+        Ex = HDF5.read(group, string(pt) * "/" * string(var1))
+        Ey = HDF5.read(group, string(pt) * "/" * string(var2))
         Exmin, Exmax = extrema(Ex)
         Eymin, Eymax = extrema(Ey)
         Emin = sqrt(Exmin^2 + Eymin^2)
@@ -216,7 +214,10 @@ function plot_viewpoints_polarization(
     tones = ones(length(t))
 
     fig = mak.Figure(size=(950,992))
-    ax = mak.Axis3(fig[1,1]; perspectiveness=0, xlabel="t ($stu)", ylabel=C2, zlabel=C1)
+    ax = mak.Axis3(
+        fig[1,1]; perspectiveness=0,
+        xlabel="t ($stu)", ylabel=string(var2), zlabel=string(var1),
+    )
     mak.xlims!(ax, (xmin,xmax))
     mak.ylims!(ax, (ymin,ymax))
     mak.zlims!(ax, (zmin,zmax))
@@ -229,8 +230,8 @@ function plot_viewpoints_polarization(
     # read data, normalize, and plot:
     for (n, pt) in enumerate(viewpoints)
         point = HDF5.read(group, "$pt/point")
-        Ex = HDF5.read(group, string(pt) * "/" * C1)
-        Ey = HDF5.read(group, string(pt) * "/" * C2)
+        Ex = HDF5.read(group, string(pt) * "/" * string(var1))
+        Ey = HDF5.read(group, string(pt) * "/" * string(var2))
 
         @. Ex = Ex / Enorm
         @. Ey = Ey / Enorm
@@ -252,9 +253,7 @@ function plot_viewpoints_polarization(
     HDF5.close(fp)
 
     if save
-        ext = splitext(fname)[end]
-        fname_fig = replace(fname, ext => ".png")
-        mak.save(fname_fig, fig)
+        mak.save(save_fname, fig)
     end
 
     return nothing
