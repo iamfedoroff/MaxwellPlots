@@ -11,6 +11,7 @@ function inspect(
     isnothing(yu) ? yu = space_units(y) : nothing
     isnothing(zu) ? zu = space_units(z) : nothing
     isnothing(tu) ? tu = time_units(t) : nothing
+    xu = yu = zu = max(xu, yu, zu)
     sxu = space_units_name(xu)
     syu = space_units_name(yu)
     szu = space_units_name(zu)
@@ -111,6 +112,7 @@ function inspect_xsec(
     isnothing(yu) ? yu = space_units(y) : nothing
     isnothing(zu) ? zu = space_units(z) : nothing
     isnothing(tu) ? tu = time_units(t) : nothing
+    xu = yu = zu = max(xu, yu, zu)
     sxu = space_units_name(xu)
     syu = space_units_name(yu)
     szu = space_units_name(zu)
@@ -217,6 +219,7 @@ function inspect_volume(
     isnothing(xu) ? xu = space_units(x) : nothing
     isnothing(yu) ? yu = space_units(y) : nothing
     isnothing(zu) ? zu = space_units(z) : nothing
+    xu = yu = zu = max(xu, yu, zu)
     sxu = space_units_name(xu)
     syu = space_units_name(yu)
     szu = space_units_name(zu)
@@ -349,6 +352,7 @@ function plot_volume(
     isnothing(xu) ? xu = space_units(x) : nothing
     isnothing(yu) ? yu = space_units(y) : nothing
     isnothing(zu) ? zu = space_units(z) : nothing
+    xu = yu = zu = max(xu, yu, zu)
     sxu = space_units_name(xu)
     syu = space_units_name(yu)
     szu = space_units_name(zu)
@@ -428,6 +432,7 @@ function plot_volume_xsec(
     isnothing(xu) ? xu = space_units(x) : nothing
     isnothing(yu) ? yu = space_units(y) : nothing
     isnothing(zu) ? zu = space_units(z) : nothing
+    xu = yu = zu = max(xu, yu, zu)
     sxu = space_units_name(xu)
     syu = space_units_name(yu)
     szu = space_units_name(zu)

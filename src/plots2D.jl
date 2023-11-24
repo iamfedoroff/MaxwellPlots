@@ -15,6 +15,7 @@ function plot2D(
     isnothing(xu) ? xu = space_units(x) : nothing
     isnothing(zu) ? zu = space_units(z) : nothing
     isnothing(tu) ? tu = time_units(t) : nothing
+    xu = zu = max(xu, zu)
     sxu = space_units_name(xu)
     szu = space_units_name(zu)
     stu = time_units_name(tu)
@@ -82,6 +83,7 @@ function inspect2D(
     isnothing(xu) ? xu = space_units(x) : nothing
     isnothing(zu) ? zu = space_units(z) : nothing
     isnothing(tu) ? tu = time_units(t) : nothing
+    xu = zu = max(xu, zu)
     sxu = space_units_name(xu)
     szu = space_units_name(zu)
     stu = time_units_name(tu)
@@ -150,6 +152,7 @@ function inspect2D_xsec(
     isnothing(xu) ? xu = space_units(x) : nothing
     isnothing(zu) ? zu = space_units(z) : nothing
     isnothing(tu) ? tu = time_units(t) : nothing
+    xu = zu = max(xu, zu)
     sxu = space_units_name(xu)
     szu = space_units_name(zu)
     stu = time_units_name(tu)
@@ -203,6 +206,7 @@ function plot2D(
 
     isnothing(xu) ? xu = space_units(x) : nothing
     isnothing(zu) ? zu = space_units(z) : nothing
+    xu = zu = max(xu, zu)
     sxu = space_units_name(xu)
     szu = space_units_name(zu)
 

@@ -151,6 +151,7 @@ function plot_geometry(
 
     isnothing(xu) ? xu = space_units(x) : nothing
     isnothing(zu) ? zu = space_units(z) : nothing
+    xu = zu = max(xu, zu)
     sxu = space_units_name(xu)
     szu = space_units_name(zu)
 
@@ -193,6 +194,7 @@ function plot_geometry(
     isnothing(xu) ? xu = space_units(x) : nothing
     isnothing(yu) ? yu = space_units(y) : nothing
     isnothing(zu) ? zu = space_units(z) : nothing
+    xu = yu = zu = max(xu, yu, zu)
     sxu = space_units_name(xu)
     syu = space_units_name(yu)
     szu = space_units_name(zu)
