@@ -25,7 +25,8 @@ export plot_geometry,
        plot3D_xsec_diff,
        plot_viewpoints,
        plot_viewpoints_spectrum,
-       plot_viewpoints_polarization
+       plot_viewpoints_polarization,
+       rough_plot
 
 include("util.jl")
 include("recipes3D.jl")
@@ -33,5 +34,6 @@ include("plots1D.jl")
 include("plots2D.jl")
 include("plots3D.jl")
 include("viewpoints.jl")
+include("rough.jl")
 
 end
