@@ -109,12 +109,7 @@ function inspect3D_volume(
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
-    if string(var) in ("Sa", "rho_end")
-        F = HDF5.read(fp, string(var))
-        isnothing(colormap) ? colormap = CMAP : nothing
-    else
-        error("Wrong input varible " * string(var))
-    end
+    F = HDF5.read(fp, string(var))
     HDF5.close(fp)
 
     if save && isnothing(save_fname)
@@ -142,10 +137,7 @@ function plot3D(
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
-    if string(var) in ("Sa", "rho_end")
-        F = HDF5.read(fp, string(var))
-        isnothing(colormap) ? colormap = CMAP : nothing
-    end
+    F = HDF5.read(fp, string(var))
     HDF5.close(fp)
 
     if save && isnothing(save_fname)
@@ -173,9 +165,7 @@ function plot3D_diff(
     x1 = HDF5.read(fp, "x")
     y1 = HDF5.read(fp, "y")
     z1 = HDF5.read(fp, "z")
-    if string(var) in ("Sa", "rho_end")
-        F1 = HDF5.read(fp, string(var))
-    end
+    F1 = HDF5.read(fp, string(var))
     HDF5.close(fp)
 
     fp = HDF5.h5open(fname2, "r")
@@ -217,10 +207,7 @@ function plot3D_xsec(
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
-    if string(var) in ("Sa", "rho_end")
-        F = HDF5.read(fp, string(var))
-        isnothing(colormap) ? colormap = CMAP : nothing
-    end
+    F = HDF5.read(fp, string(var))
     HDF5.close(fp)
 
     if save && isnothing(save_fname)
@@ -249,9 +236,7 @@ function plot3D_xsec_diff(
     x1 = HDF5.read(fp, "x")
     y1 = HDF5.read(fp, "y")
     z1 = HDF5.read(fp, "z")
-    if string(var) in ("Sa", "rho_end")
-        F1 = HDF5.read(fp, string(var))
-    end
+    F1 = HDF5.read(fp, string(var))
     HDF5.close(fp)
 
     fp = HDF5.h5open(fname2, "r")

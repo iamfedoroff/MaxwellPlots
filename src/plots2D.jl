@@ -197,11 +197,7 @@ function plot2D(
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
-    if string(var) in ("Sa", "rho_end")
-        F = HDF5.read(fp, string(var))
-    else
-        error("Unknown variable $(string(var))")
-    end
+    F = HDF5.read(fp, string(var))
     HDF5.close(fp)
 
     isnothing(xu) ? xu = space_units(x) : nothing
