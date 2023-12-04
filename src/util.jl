@@ -177,8 +177,9 @@ end
 
 function plot_geometry(
     x, y, z, geometry;
-    xu=nothing, yu=nothing, zu=nothing, cmap=CMAP, aspect=:data,
-    smooth_interfaces=false, new_window=false, algorithm=:iso, isovalue=1, absorption=1,
+    xu=nothing, yu=nothing, zu=nothing, xlims=nothing, ylims=nothing, zlims=nothing,
+    colormap=CMAP, aspect=:data, smooth_interfaces=false, new_window=false, algorithm=:iso,
+    isovalue=1, absorption=1, save=false, save_fname="out.png",
 )
     if typeof(geometry) <: Function
         Nx, Ny, Nz = length(x), length(y), length(z)
@@ -186,6 +187,8 @@ function plot_geometry(
     else
         F = geometry
     end
+
+    x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
 
     if smooth_interfaces
         F = moving_average(F, 2)
@@ -204,17 +207,24 @@ function plot_geometry(
     zz = z / zu
 
     fig = mak.Figure(size=(950,992))
-    if new_window
-        mak.display(mak.Screen(), fig)
-    end
     ax = mak.Axis3(
         fig[1,1];
         xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)",
         title="Material geometry", aspect, perspectiveness=0,
     )
-    img = mak.volume!(ax, xx, yy, zz, F; colormap=cmap, algorithm, isovalue, absorption)
+    mak.limits!(ax, xx[1], xx[end], yy[1], yy[end], zz[1], zz[end])
+    img = mak.volume!(ax, xx, yy, zz, F; colormap, algorithm, isovalue, absorption)
     # mak.Colorbar(fig[1,2], img; label="geometry")
-    mak.display(fig)
+
+    if save
+        mak.save(save_fname, fig)
+    end
+
+    if new_window
+        mak.display(mak.Screen(), fig)
+    else
+        mak.display(fig)
+    end
     return nothing
 end
 

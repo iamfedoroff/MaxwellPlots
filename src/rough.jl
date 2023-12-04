@@ -21,8 +21,8 @@ end
 
 function rough_plot(
     x, y, R;
-    xu=nothing, yu=nothing, Ru=nothing, colormap=CMAPDIV, colorrange=nothing,
-    new_window=false,
+    xu=nothing, yu=nothing, Ru=nothing, colormap=CMAPDIV, colorrange=nothing, save=false,
+    save_fname="out.png", new_window=false,
 )
     isnothing(xu) ? xu = space_units(x) : nothing
     isnothing(yu) ? yu = space_units(y) : nothing
@@ -70,6 +70,10 @@ function rough_plot(
     mak.Colorbar(fig[3,1], hm; vertical=false, flipaxis=false, label="R ($sRu)")
 
     mak.lines!(ax22, Ry/Ru, y/yu)
+
+    if save
+        mak.save(save_fname, fig)
+    end
 
     if new_window
         mak.display(mak.Screen(), fig)
