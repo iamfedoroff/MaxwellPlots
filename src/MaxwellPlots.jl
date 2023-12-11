@@ -30,6 +30,7 @@ export plot_geometry,
 
 include("util.jl")
 include("recipes3D.jl")
+include("plot_geometry.jl")
 include("plots1D.jl")
 include("plots2D.jl")
 include("plots3D.jl")
