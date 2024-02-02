@@ -216,10 +216,12 @@ function inspect_volume(
     isnothing(ycut) ? iy = halfint(Ny) : iy = argmin(abs.(y.-ycut))
     isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
 
-    isnothing(xu) ? xu = space_units(x) : nothing
-    isnothing(yu) ? yu = space_units(y) : nothing
-    isnothing(zu) ? zu = space_units(z) : nothing
-    xu = yu = zu = max(xu, yu, zu)
+    isnothing(xu) ? xu0 = space_units(x) : nothing
+    isnothing(yu) ? yu0 = space_units(y) : nothing
+    isnothing(zu) ? zu0 = space_units(z) : nothing
+    if isnothing(xu) && isnothing(yu) && isnothing(zu)
+        xu = yu = zu = max(xu0, yu0, zu0)
+    end
     sxu = space_units_name(xu)
     syu = space_units_name(yu)
     szu = space_units_name(zu)
