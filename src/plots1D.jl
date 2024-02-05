@@ -9,10 +9,10 @@ function plot1D(
     F = HDF5.read(fp, "fields/" * string(var))
     HDF5.close(fp)
 
-    isnothing(zu) ? zu = space_units(z) : nothing
-    isnothing(tu) ? tu = time_units(t) : nothing
-    szu = space_units_name(zu)
-    stu = time_units_name(tu)
+    zu = isnothing(zu) ? units(z) : zu
+    tu = isnothing(tu) ? units(t) : tu
+    szu = units_name_space(zu)
+    stu = units_name_time(tu)
 
     @. z = z / zu
     @. t = t / tu
@@ -55,51 +55,6 @@ function plot1D(
 end
 
 
-function inspect1D(
-    fname, var; zu=nothing, tu=nothing, vmin=-1, vmax=1, norm=true, new_window=false,
-)
-    fp = HDF5.h5open(fname, "r")
-    z = HDF5.read(fp, "z")
-    t = HDF5.read(fp, "fields/t")
-    F = HDF5.read(fp, "fields/" * string(var))
-    HDF5.close(fp)
-
-    isnothing(zu) ? zu = space_units(z) : nothing
-    isnothing(tu) ? tu = time_units(t) : nothing
-    szu = space_units_name(zu)
-    stu = time_units_name(tu)
-
-    @. z = z / zu
-    @. t = t / tu
-
-    @show extrema(F)
-    if norm
-        F .= F ./ maximum(F)
-    end
-
-    fig = mak.Figure(size=(950,992))
-    ax = mak.Axis(fig[1,1]; xlabel="z ($szu)", ylabel=string(var))
-
-    it = 1
-    line = mak.lines!(ax, z, F[:,it])
-    mak.ylims!(ax, (vmin,vmax))
-    ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
-
-    sg = mak.SliderGrid(fig[2,1], (label="Time", range=1:length(t), startvalue=1))
-    mak.on(sg.sliders[1].value) do it
-        line[2] = F[:,it]
-        ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
-    end
-
-    if new_window
-        mak.display(mak.Screen(), fig)
-    else
-        mak.display(fig)
-    end
-    return nothing
-end
-
-
 function plot1D_line(
     fname, var;
     zu=nothing, norm=true, vmin=nothing, vmax=nothing, save=false, save_fname=nothing,
@@ -110,8 +65,8 @@ function plot1D_line(
     F = HDF5.read(fp, string(var))
     HDF5.close(fp)
 
-    isnothing(zu) ? zu = space_units(z) : nothing
-    szu = space_units_name(zu)
+    zu = isnothing(zu) ? units(z) : zu
+    szu = units_name_space(zu)
 
     @. z = z / zu
 

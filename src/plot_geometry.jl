@@ -43,8 +43,8 @@ function plot_geometry(
         F = geometry
     end
 
-    isnothing(zu) ? zu = space_units(z) : nothing
-    szu = space_units_name(zu)
+    isnothing(zu) ? zu = units(z) : nothing
+    szu = units_name_space(zu)
 
     fig = mak.Figure(size=(950,992))
     ax = mak.Axis(fig[1,1]; xlabel="z ($szu)", ylabel="Material geometry")
@@ -76,11 +76,10 @@ function plot_geometry(
         F = geometry
     end
 
-    isnothing(xu) ? xu = space_units(x) : nothing
-    isnothing(zu) ? zu = space_units(z) : nothing
-    xu = zu = max(xu, zu)
-    sxu = space_units_name(xu)
-    szu = space_units_name(zu)
+    xu = isnothing(xu) ? units(x) : xu
+    zu = isnothing(zu) ? units(z) : zu
+    sxu = units_name_space(xu)
+    szu = units_name_space(zu)
 
     xx = x / xu
     zz = z / zu
@@ -110,8 +109,8 @@ end
 function plot_geometry(
     x, y, z, geometry;
     xu=nothing, yu=nothing, zu=nothing, xlims=nothing, ylims=nothing, zlims=nothing,
-    colormap=CMAP, aspect=:data, new_window=false, algorithm=:iso, isovalue=1, absorption=1,
-    save=false, save_fname="out.png",
+    colormap=CMAP, aspect=(1,1,1), new_window=false, algorithm=:iso, isovalue=1,
+    absorption=1, save=false, save_fname="out.png",
 )
     if typeof(geometry) <: Function
         F = [geometry(xi,yi,zi) ? 1 : 0 for xi=x, yi=y, zi=z]
@@ -121,13 +120,12 @@ function plot_geometry(
 
     x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
 
-    isnothing(xu) ? xu = space_units(x) : nothing
-    isnothing(yu) ? yu = space_units(y) : nothing
-    isnothing(zu) ? zu = space_units(z) : nothing
-    xu = yu = zu = max(xu, yu, zu)
-    sxu = space_units_name(xu)
-    syu = space_units_name(yu)
-    szu = space_units_name(zu)
+    xu = isnothing(xu) ? units(x) : xu
+    yu = isnothing(yu) ? units(y) : yu
+    zu = isnothing(zu) ? units(z) : zu
+    sxu = units_name_space(xu)
+    syu = units_name_space(yu)
+    szu = units_name_space(zu)
 
     xx = x / xu
     yy = y / yu

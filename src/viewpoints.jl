@@ -21,10 +21,10 @@ function plot_viewpoints(
     z = HDF5.read(fp, "z")
     t = HDF5.read(group, "t")
 
-    isnothing(zu) ? zu = space_units(z) : nothing
-    isnothing(tu) ? tu = time_units(t) : nothing
-    szu = space_units_name(zu)
-    stu = time_units_name(tu)
+    isnothing(zu) ? zu = units(z) : nothing
+    isnothing(tu) ? tu = units(t) : nothing
+    szu = units_name_space(zu)
+    stu = units_name_time(tu)
 
     Enorm = 1
 
@@ -98,8 +98,8 @@ function plot_viewpoints_spectrum(
     dt = t[2] - t[1]
     w = 2*pi * FFTW.rfftfreq(Nt, 1/dt)
 
-    isnothing(zu) ? zu = space_units(z) : nothing
-    szu = space_units_name(zu)
+    isnothing(zu) ? zu = units(z) : nothing
+    szu = units_name_space(zu)
 
     Snorm = 1
 
@@ -179,10 +179,10 @@ function plot_viewpoints_polarization(
     z = HDF5.read(fp, "z")
     t = HDF5.read(group, "t")
 
-    isnothing(zu) ? zu = space_units(z) : nothing
-    isnothing(tu) ? tu = time_units(t) : nothing
-    szu = space_units_name(zu)
-    stu = time_units_name(tu)
+    isnothing(zu) ? zu = units(z) : nothing
+    isnothing(tu) ? tu = units(t) : nothing
+    szu = units_name_space(zu)
+    stu = units_name_time(tu)
 
     @. t = t / tu
 

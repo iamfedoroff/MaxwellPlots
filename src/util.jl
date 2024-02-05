@@ -5,13 +5,34 @@ const CMAPDIV = :bwr
 halfint(N) = iseven(N) ? div(N,2) : div(N,2)+1
 
 
-function space_units(x::AbstractArray)
-    return space_units(max(extrema(x)...))
+function default_colormap(F)
+    return prod(extrema(F)) < 0 ? CMAPDIV : CMAP
 end
 
 
-function space_units(x)
-    if abs(x) < 1e-6
+function default_colorrange(F)
+    ex = extrema(F)
+    if prod(ex) < 0
+        exmax = max(ex...)
+        colorrange = (-exmax, exmax)
+    else
+        colorrange = ex
+    end
+    return colorrange
+end
+
+
+function units(x::AbstractArray)
+    return units(max(extrema(x)...))
+end
+
+
+function units(x)
+    if abs(x) < 1e-12
+        xu = 1e-15
+    elseif abs(x) < 1e-9
+        xu = 1e-12
+    elseif abs(x) < 1e-6
         xu = 1e-9
     elseif abs(x) < 1e-3
         xu = 1e-6
@@ -24,7 +45,7 @@ function space_units(x)
 end
 
 
-function space_units_name(xu)
+function units_name_space(xu)
     sxu = "arb. u."
     if xu == 1
         sxu = "m"
@@ -41,30 +62,7 @@ function space_units_name(xu)
 end
 
 
-function time_units(t::AbstractArray)
-    return time_units(max(extrema(t)...))
-end
-
-
-function time_units(t)
-    if abs(t) < 1e-12
-        tu = 1e-15
-    elseif abs(t) < 1e-9
-        tu = 1e-12
-    elseif abs(t) < 1e-6
-        tu = 1e-9
-    elseif abs(t) < 1e-3
-        tu = 1e-6
-    elseif abs(t) < 1
-        tu = 1e-3
-    else
-        tu = 1.0
-    end
-    return tu
-end
-
-
-function time_units_name(tu)
+function units_name_time(tu)
     stu = "arb. u."
     if tu == 1
         stu = "s"
@@ -85,22 +83,27 @@ function time_units_name(tu)
 end
 
 
-function apply_limits(x, y, z, F; xlims=nothing, ylims=nothing, zlims=nothing)
-    isnothing(xlims) ? xlims=(nothing,nothing) : nothing
-    isnothing(ylims) ? ylims=(nothing,nothing) : nothing
-    isnothing(zlims) ? zlims=(nothing,nothing) : nothing
+function indices_of_limits(x, xlims)
+    xlims = isnothing(xlims) ? (nothing,nothing) : xlims
     xmin, xmax = xlims
-    ymin, ymax = ylims
-    zmin, zmax = zlims
-    isnothing(xmin) ? xmin=x[1] : nothing
-    isnothing(xmax) ? xmax=x[end] : nothing
-    isnothing(ymin) ? ymin=y[1] : nothing
-    isnothing(ymax) ? ymax=y[end] : nothing
-    isnothing(zmin) ? zmin=z[1] : nothing
-    isnothing(zmax) ? zmax=z[end] : nothing
+    xmin = isnothing(xmin) ? x[1] : xmin
+    xmax = isnothing(xmax) ? x[end] : xmax
     ix1, ix2 = argmin(abs.(x.-xmin)), argmin(abs.(x.-xmax))
-    iy1, iy2 = argmin(abs.(y.-ymin)), argmin(abs.(y.-ymax))
-    iz1, iz2 = argmin(abs.(z.-zmin)), argmin(abs.(z.-zmax))
+    return ix1, ix2
+end
+
+
+function apply_limits(x, y, F; xlims=nothing, ylims=nothing)
+    ix1, ix2 = indices_of_limits(x, xlims)
+    iy1, iy2 = indices_of_limits(y, ylims)
+    return x[ix1:ix2], y[iy1:iy2], F[ix1:ix2,iy1:iy2]
+end
+
+
+function apply_limits(x, y, z, F; xlims=nothing, ylims=nothing, zlims=nothing)
+    ix1, ix2 = indices_of_limits(x, xlims)
+    iy1, iy2 = indices_of_limits(y, ylims)
+    iz1, iz2 = indices_of_limits(z, zlims)
     return x[ix1:ix2], y[iy1:iy2], z[iz1:iz2], F[ix1:ix2,iy1:iy2,iz1:iz2]
 end
 
@@ -108,28 +111,27 @@ end
 function apply_limits(
     x, y, z, t, F; xlims=nothing, ylims=nothing, zlims=nothing, tlims=nothing,
 )
-    isnothing(xlims) ? xlims=(nothing,nothing) : nothing
-    isnothing(ylims) ? ylims=(nothing,nothing) : nothing
-    isnothing(zlims) ? zlims=(nothing,nothing) : nothing
-    isnothing(tlims) ? tlims=(nothing,nothing) : nothing
-    xmin, xmax = xlims
-    ymin, ymax = ylims
-    zmin, zmax = zlims
-    tmin, tmax = tlims
-    isnothing(xmin) ? xmin=x[1] : nothing
-    isnothing(xmax) ? xmax=x[end] : nothing
-    isnothing(ymin) ? ymin=y[1] : nothing
-    isnothing(ymax) ? ymax=y[end] : nothing
-    isnothing(zmin) ? zmin=z[1] : nothing
-    isnothing(zmax) ? zmax=z[end] : nothing
-    isnothing(tmin) ? tmin=t[1] : nothing
-    isnothing(tmax) ? tmax=t[end] : nothing
-    ix1, ix2 = argmin(abs.(x.-xmin)), argmin(abs.(x.-xmax))
-    iy1, iy2 = argmin(abs.(y.-ymin)), argmin(abs.(y.-ymax))
-    iz1, iz2 = argmin(abs.(z.-zmin)), argmin(abs.(z.-zmax))
-    it1, it2 = argmin(abs.(t.-tmin)), argmin(abs.(t.-tmax))
+    ix1, ix2 = indices_of_limits(x, xlims)
+    iy1, iy2 = indices_of_limits(y, ylims)
+    iz1, iz2 = indices_of_limits(z, zlims)
+    it1, it2 = indices_of_limits(t, tlims)
     return x[ix1:ix2], y[iy1:iy2], z[iz1:iz2], t[it1:it2],
            F[ix1:ix2,iy1:iy2,iz1:iz2,it1:it2]
+end
+
+
+function grid_dims(fname)
+    fp = HDF5.h5open(fname, "r")
+    fpkeys = keys(fp)
+    if "y" in fpkeys
+        n = 3
+    elseif "x" in fpkeys
+        n = 2
+    else
+        n = 1
+    end
+    HDF5.close(fp)
+    return n
 end
 
 
@@ -137,8 +139,8 @@ function plot_waveform(model; tu=1)
     (; field, sources, t) = model
     (; waveform, p, icomp) = sources[1]
 
-    isnothing(tu) ? tu = time_units(t) : nothing
-    stu = time_units_name(tu)
+    isnothing(tu) ? tu = units(t) : nothing
+    stu = units_name_time(tu)
 
     tt = t / tu
 

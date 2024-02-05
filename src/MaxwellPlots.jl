@@ -8,15 +8,16 @@ import Printf: @sprintf
 
 export plot_geometry,
        plot_waveform,
-       plot1D,
+       inspect,
        inspect1D,
+       inspect2D,
+       inspect3D,
+       plot1D,
        plot1D_line,
        plot2D,
-       inspect2D,
        inspect2D_xsec,
        inspect2D_poynting,
        plot2D_poynting_averaged,
-       inspect3D,
        inspect3D_xsec,
        inspect3D_volume,
        plot3D,
@@ -29,6 +30,7 @@ export plot_geometry,
        rough_plot
 
 include("util.jl")
+include("inspect.jl")
 include("recipes3D.jl")
 include("plot_geometry.jl")
 include("plots1D.jl")

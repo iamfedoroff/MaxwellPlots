@@ -1,97 +1,3 @@
-function inspect(
-    x, y, z, t, F;
-    xu=nothing, yu=nothing, zu=nothing, tu=nothing,
-    xlims=nothing, ylims=nothing, zlims=nothing, tlims=nothing,
-    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
-    movie=false, movie_fname="movie.mp4", new_window=false,
-)
-    x, y, z, t, F = apply_limits(x, y, z, t, F; xlims, ylims, zlims, tlims)
-
-    isnothing(xu) ? xu = space_units(x) : nothing
-    isnothing(yu) ? yu = space_units(y) : nothing
-    isnothing(zu) ? zu = space_units(z) : nothing
-    isnothing(tu) ? tu = time_units(t) : nothing
-    xu = yu = zu = max(xu, yu, zu)
-    sxu = space_units_name(xu)
-    syu = space_units_name(yu)
-    szu = space_units_name(zu)
-    stu = time_units_name(tu)
-
-    @. x = x / xu
-    @. y = y / yu
-    @. z = z / zu
-    @. t = t / tu
-
-    it = 1
-
-    @show extrema(F)
-    if norm
-        F .= F ./ maximum(F)
-    end
-
-    # --------------------------------------------------------------------------------------
-    isnothing(colorrange) ? colorrange = (minimum(F), maximum(F)) : nothing
-    vmin, vmax = colorrange
-    isnothing(vmin) ? vmin = minimum(F) : nothing
-    isnothing(vmax) ? vmax = maximum(F) : nothing
-    colorrange = (vmin, vmax)
-    if vmin * vmax < 0
-        isnothing(colormap) ? colormap = CMAPDIV : nothing
-        colormap = mak.to_colormap(colormap)
-        Nmid = halfint(length(colormap))
-        @. colormap[Nmid-1:Nmid+1] = mak.RGBAf(0,0,0,0)
-    else
-        isnothing(colormap) ? colormap = CMAP : nothing
-        colormap = mak.to_colormap(colormap)
-        colormap[1] = mak.RGBAf(0,0,0,0)
-    end
-
-    fig = mak.Figure(size=(950,992))
-
-    ax = mak.Axis3(
-        fig[1,1];
-        aspect, perspectiveness=0, xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)",
-    )
-    mak.limits!(ax, x[1], x[end], y[1], y[end], z[1], z[end])
-    ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
-
-    img = mak.volume!(
-        ax, x, y, z, F[:,:,:,it]; colormap, colorrange,
-        algorithm=:absorption, absorption=4f0,
-        # algorithm=:iso, isovalue=0.5*vmax,
-    )
-    # img = mak.contour!(
-    #     ax, x, y, z, F[:,:,:,it];
-    #     levels=[0.1*vmin,0.1*vmax], colormap=cmap, colorrange=(vmin,vmax),
-    #     alpha=1,
-    # )
-
-    if colorbar
-        mak.Colorbar(fig[1,2], img; height=mak.Relative(0.5))
-    end
-
-    if movie
-        mak.record(fig, movie_fname, 1:length(t); framerate=6) do it
-            img[4] = F[:,:,:,it]
-            ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
-        end
-    else
-        sg = mak.SliderGrid(fig[2,1], (label="Time", range=1:length(t), startvalue=1))
-        mak.on(sg.sliders[1].value) do it
-            img[4] = F[:,:,:,it]
-            ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
-        end
-    end
-
-    if new_window
-        mak.display(mak.Screen(), fig)
-    else
-        mak.display(fig)
-    end
-    return nothing
-end
-
-
 function inspect_xsec(
     x, y, z, t, F;
     xu=1, yu=1, zu=1, tu=1,
@@ -108,15 +14,14 @@ function inspect_xsec(
     isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
     Lx, Ly, Lz  = x[end]-x[1], y[end]-y[1], z[end]-z[1]
 
-    isnothing(xu) ? xu = space_units(x) : nothing
-    isnothing(yu) ? yu = space_units(y) : nothing
-    isnothing(zu) ? zu = space_units(z) : nothing
-    isnothing(tu) ? tu = time_units(t) : nothing
-    xu = yu = zu = max(xu, yu, zu)
-    sxu = space_units_name(xu)
-    syu = space_units_name(yu)
-    szu = space_units_name(zu)
-    stu = time_units_name(tu)
+    xu = isnothing(xu) ? units(x) : xu
+    yu = isnothing(yu) ? units(y) : yu
+    zu = isnothing(zu) ? units(z) : zu
+    tu = isnothing(tu) ? units(t) : tu
+    sxu = units_name_space(xu)
+    syu = units_name_space(yu)
+    szu = units_name_space(zu)
+    stu = units_name_time(tu)
 
     @. x = x / xu
     @. y = y / yu
@@ -206,7 +111,7 @@ function inspect_volume(
     xu=nothing, yu=nothing, zu=nothing,
     xcut=nothing, ycut=nothing, zcut=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
-    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
+    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=(1,1,1),
     save=false, save_fname="image.png", new_window=false,
 )
     x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
@@ -216,15 +121,12 @@ function inspect_volume(
     isnothing(ycut) ? iy = halfint(Ny) : iy = argmin(abs.(y.-ycut))
     isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
 
-    isnothing(xu) ? xu0 = space_units(x) : nothing
-    isnothing(yu) ? yu0 = space_units(y) : nothing
-    isnothing(zu) ? zu0 = space_units(z) : nothing
-    if isnothing(xu) && isnothing(yu) && isnothing(zu)
-        xu = yu = zu = max(xu0, yu0, zu0)
-    end
-    sxu = space_units_name(xu)
-    syu = space_units_name(yu)
-    szu = space_units_name(zu)
+    xu = isnothing(xu) ? units(x) : xu
+    yu = isnothing(yu) ? units(y) : yu
+    zu = isnothing(zu) ? units(z) : zu
+    sxu = units_name_space(xu)
+    syu = units_name_space(yu)
+    szu = units_name_space(zu)
 
     @. x = x / xu
     @. y = y / yu
@@ -346,18 +248,17 @@ function plot_volume(
     x, y, z, F;
     xu=nothing, yu=nothing, zu=nothing,
     xlims=nothing, ylims=nothing, zlims=nothing,
-    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=:data,
+    norm=true, colormap=nothing, colorrange=nothing, colorbar=true, aspect=(1,1,1),
     save=false, save_fname="image.png", new_window=false,
 )
     x, y, z, F = apply_limits(x, y, z, F; xlims, ylims, zlims)
 
-    isnothing(xu) ? xu = space_units(x) : nothing
-    isnothing(yu) ? yu = space_units(y) : nothing
-    isnothing(zu) ? zu = space_units(z) : nothing
-    xu = yu = zu = max(xu, yu, zu)
-    sxu = space_units_name(xu)
-    syu = space_units_name(yu)
-    szu = space_units_name(zu)
+    xu = isnothing(xu) ? units(x) : xu
+    yu = isnothing(yu) ? units(y) : yu
+    zu = isnothing(zu) ? units(z) : zu
+    sxu = units_name_space(xu)
+    syu = units_name_space(yu)
+    szu = units_name_space(zu)
 
     @. x = x / xu
     @. y = y / yu
@@ -431,13 +332,12 @@ function plot_volume_xsec(
     isnothing(zcut) ? iz = halfint(Nz) : iz = argmin(abs.(z.-zcut))
     Lx, Ly, Lz  = x[end]-x[1], y[end]-y[1], z[end]-z[1]
 
-    isnothing(xu) ? xu = space_units(x) : nothing
-    isnothing(yu) ? yu = space_units(y) : nothing
-    isnothing(zu) ? zu = space_units(z) : nothing
-    xu = yu = zu = max(xu, yu, zu)
-    sxu = space_units_name(xu)
-    syu = space_units_name(yu)
-    szu = space_units_name(zu)
+    xu = isnothing(xu) ? units(x) : xu
+    yu = isnothing(yu) ? units(y) : yu
+    zu = isnothing(zu) ? units(z) : zu
+    sxu = units_name_space(xu)
+    syu = units_name_space(yu)
+    szu = units_name_space(zu)
 
     @. x = x / xu
     @. y = y / yu

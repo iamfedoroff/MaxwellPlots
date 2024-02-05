@@ -2,10 +2,10 @@
 # Visualize rough edges, surfaces, and volumes
 # ******************************************************************************************
 function rough_plot(x, R; xu=nothing, Ru=nothing, new_window=false)
-    isnothing(xu) ? xu = space_units(x) : nothing
-    isnothing(Ru) ? Ru = space_units(R) : nothing
-    sxu = space_units_name(xu)
-    sRu = space_units_name(Ru)
+    isnothing(xu) ? xu = units(x) : nothing
+    isnothing(Ru) ? Ru = units(R) : nothing
+    sxu = units_name_space(xu)
+    sRu = units_name_space(Ru)
 
     fig = mak.Figure(size=(800,600))
     ax = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="R ($sRu)")
@@ -24,13 +24,12 @@ function rough_plot(
     xu=nothing, yu=nothing, Ru=nothing, colormap=CMAPDIV, colorrange=nothing, save=false,
     save_fname="out.png", new_window=false,
 )
-    isnothing(xu) ? xu = space_units(x) : nothing
-    isnothing(yu) ? yu = space_units(y) : nothing
-    isnothing(Ru) ? Ru = space_units(R) : nothing
-    xu = yu = max(xu, yu)
-    sxu = space_units_name(xu)
-    syu = space_units_name(yu)
-    sRu = space_units_name(Ru)
+    isnothing(xu) ? xu = units(x) : nothing
+    isnothing(yu) ? yu = units(y) : nothing
+    isnothing(Ru) ? Ru = units(R) : nothing
+    sxu = units_name_space(xu)
+    syu = units_name_space(yu)
+    sRu = units_name_space(Ru)
 
     if isnothing(colorrange)
         Rmax = maximum(abs, R/Ru)
@@ -88,18 +87,17 @@ end
 function rough_plot(
     x, y, z, R;
     xu=nothing, yu=nothing, zu=nothing, Ru=nothing, colormap=CMAPDIV, colorrange=nothing,
-    aspect=:data, colorbar=true, algorithm=:volumeslices, absorption=1, isovalue=0,
+    aspect=(1,1,1), colorbar=true, algorithm=:volumeslices, absorption=1, isovalue=0,
     new_window=false,
 )
-    isnothing(xu) ? xu = space_units(x) : nothing
-    isnothing(yu) ? yu = space_units(y) : nothing
-    isnothing(zu) ? zu = space_units(z) : nothing
-    isnothing(Ru) ? Ru = space_units(R) : nothing
-    xu = yu = zu = max(xu, yu, zu)
-    sxu = space_units_name(xu)
-    syu = space_units_name(yu)
-    szu = space_units_name(zu)
-    sRu = space_units_name(Ru)
+    isnothing(xu) ? xu = units(x) : nothing
+    isnothing(yu) ? yu = units(y) : nothing
+    isnothing(zu) ? zu = units(z) : nothing
+    isnothing(Ru) ? Ru = units(R) : nothing
+    sxu = units_name_space(xu)
+    syu = units_name_space(yu)
+    szu = units_name_space(zu)
+    sRu = units_name_space(Ru)
 
     if isnothing(colorrange)
         Rmax = maximum(abs, R/Ru)
