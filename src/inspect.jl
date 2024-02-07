@@ -206,7 +206,7 @@ function inspect(
     xu=nothing, yu=nothing, zu=nothing, tu=nothing, xlims=nothing, ylims=nothing,
     zlims=nothing, tlims=nothing, norm=true, colormap=nothing, colorrange=nothing,
     colorbar=true, aspect=(1,1,1), new_window=false, movie=false, movie_fname="out.mp4",
-    movie_framerate=10, label="",
+    movie_framerate=10, lscene=false, label="",
 )
     x, y, z, t, F = apply_limits(xin, yin, zin, tin, Fin; xlims, ylims, zlims, tlims)
 
@@ -241,10 +241,25 @@ function inspect(
     end
 
     fig = mak.Figure(size=(950,992))
-    ax = mak.Axis3(
-        fig[1,1];
-        aspect, perspectiveness=0, xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)",
-    )
+    if lscene
+        ax = mak.LScene(fig[1,1])
+        axis = ax.scene[mak.OldAxis]
+        axis.names[:axisnames] = ("x ($sxu)", "y ($syu)", "z ($szu)")
+        axis.names[:fontsize] = 3
+        axis.ticks[:fontsize] = 3
+        title = mak.Label(fig[1,1,mak.Top()], "").text
+
+        # Does not work properly. Clips the data.
+        # cam = mak.cameracontrols(ax)
+        # cam.settings.projectiontype[] = Makie.Orthographic
+        # mak.update_cam!(ax.scene, cam)
+    else
+        ax = mak.Axis3(
+            fig[1,1];
+            aspect, perspectiveness=0, xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)",
+        )
+        title = ax.title
+    end
 
     it = 1
     img = mak.volume!(
@@ -260,18 +275,18 @@ function inspect(
     if colorbar
         mak.Colorbar(fig[1,2], img; label, height=mak.Relative(0.5))
     end
-    ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
+    title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
 
     if movie
         mak.record(fig, movie_fname, 1:length(t); framerate=movie_framerate) do it
             img[4] = F[:,:,:,it]
-            ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
+            title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
         end
     else
         sg = mak.SliderGrid(fig[2,1], (label="Time", range=1:length(t), startvalue=1))
         mak.on(sg.sliders[1].value) do it
             img[4] = F[:,:,:,it]
-            ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
+            title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
         end
 
         if new_window
