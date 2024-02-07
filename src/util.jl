@@ -23,7 +23,7 @@ end
 
 
 function units(x::AbstractArray)
-    return units(max(extrema(x)...))
+    return units(max(maximum(abs,x)))
 end
 
 
