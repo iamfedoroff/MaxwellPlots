@@ -243,6 +243,7 @@ function inspect(
     fig = mak.Figure(size=(950,992))
     if lscene
         ax = mak.LScene(fig[1,1])
+        mak.scale!(ax.scene, aspect)
         axis = ax.scene[mak.OldAxis]
         axis.names[:axisnames] = ("x ($sxu)", "y ($syu)", "z ($szu)")
         axis.names[:fontsize] = 3
@@ -255,8 +256,8 @@ function inspect(
         # mak.update_cam!(ax.scene, cam)
     else
         ax = mak.Axis3(
-            fig[1,1];
-            aspect, perspectiveness=0, xlabel="x ($sxu)", ylabel="y ($syu)", zlabel="z ($szu)",
+            fig[1,1]; aspect, perspectiveness=0, xlabel="x ($sxu)", ylabel="y ($syu)",
+            zlabel="z ($szu)",
         )
         title = ax.title
     end
