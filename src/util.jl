@@ -164,3 +164,19 @@ function primary_resolution()
     videomode = mak.MonitorProperties(monitor).videomode
     return (videomode.width, videomode.height)
 end
+
+
+# Decrement/increment slider with left/right keys
+# https://stackoverflow.com/a/74369487
+function slider_keyboard_control(fig, slider)
+    mak.on(mak.events(fig).keyboardbutton) do btn
+        if btn.action in (mak.Keyboard.press, mak.Keyboard.repeat)
+            if btn.key == mak.Keyboard.left
+                mak.set_close_to!(slider, slider.value[] - 1)
+            elseif btn.key == mak.Keyboard.right
+                mak.set_close_to!(slider, slider.value[] + 1)
+            end
+        end
+    end
+    return nothing
+end

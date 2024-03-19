@@ -64,6 +64,8 @@ function inspect(
             ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
         end
 
+        slider_keyboard_control(fig, sg.sliders[1])
+
         if new_window
             mak.display(mak.Screen(), fig)
         else
@@ -150,6 +152,8 @@ function inspect(
             hm[3] = F[:,:,it]
             ax.title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
         end
+
+        slider_keyboard_control(fig, sg.sliders[1])
 
         if new_window
             mak.display(mak.Screen(), fig)
@@ -289,6 +293,8 @@ function inspect(
             img[4] = F[:,:,:,it]
             title[] = @sprintf("%d:     %.3f (%s)", it, t[it], stu)
         end
+
+        slider_keyboard_control(fig, sg.sliders[1])
 
         if new_window
             mak.display(mak.Screen(), fig)
