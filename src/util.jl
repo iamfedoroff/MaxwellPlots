@@ -146,8 +146,32 @@ function plot_waveform(model; tu=1)
 
     component = fieldnames(typeof(field))[icomp]
 
-    # F = @. waveform(0, 0, 0, t, (p,))
-    F = @. waveform(0, 0, 0, t)
+    (; grid) = field
+
+    if :y in fieldnames(typeof(grid))
+        n = 3
+    elseif :x in fieldnames(typeof(grid))
+        n = 2
+    else
+        n = 1
+    end
+    if isnothing(p)
+        if n == 1
+            F = @. waveform(0, t)
+        elseif n == 2
+            F = @. waveform(0, 0, t)
+        elseif n == 3
+            F = @. waveform(0, 0, 0, t)
+        end
+    else
+        if n == 1
+            F = @. waveform(0, t, (p,))
+        elseif n == 2
+            F = @. waveform(0, 0, t, (p,))
+        elseif n == 3
+            F = @. waveform(0, 0, 0, t, (p,))
+        end
+    end
 
     fig = mak.Figure(size=(950,992))
     mak.display(mak.Screen(), fig)
