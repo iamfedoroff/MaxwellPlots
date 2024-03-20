@@ -204,3 +204,11 @@ function slider_keyboard_control(fig, slider)
     end
     return nothing
 end
+
+
+function scene_scale(x, y, z, aspect)
+    Lx, Ly, Lz = x[end]-x[1], y[end]-y[1], z[end]-z[1]
+    Lmax = max(Lx, Ly, Lz)
+    scale = (aspect[1]*Lmax/Lx, aspect[2]*Lmax/Ly, aspect[3]*Lmax/Lz)
+    return scale ./ maximum(scale)
+end

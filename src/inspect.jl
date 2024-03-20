@@ -246,8 +246,10 @@ function inspect(
 
     fig = mak.Figure(size=(950,992))
     if lscene
+        scale = scene_scale(x, y, z, aspect)
+
         ax = mak.LScene(fig[1,1])
-        mak.scale!(ax.scene, aspect)
+        mak.scale!(ax.scene, scale)
         axis = ax.scene[mak.OldAxis]
         axis.names[:axisnames] = ("x ($sxu)", "y ($syu)", "z ($szu)")
         axis.names[:fontsize] = 3
