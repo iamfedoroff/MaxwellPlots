@@ -85,7 +85,7 @@ function inspect2D(fname, var; kwargs...)
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
     t = HDF5.read(fp, "fields/t")
-    if var in (:Ex, :Ez, :Hy)
+    if var in (:Ex, :Ez, :Hy, :rho)
         F = HDF5.read(fp, "fields/" * string(var))
     elseif var == :poynting
         Hy = HDF5.read(fp, "fields/Hy")
