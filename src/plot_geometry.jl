@@ -80,7 +80,7 @@ end
 function plot_geometry(
     xin, zin, geometry;
     xu=nothing, zu=nothing, xlims=nothing, zlims=nothing, aspect=1, colormap=nothing,
-    colorrange=nothing, colorbar=true, new_window=false, save=false, save_fname="out.png",
+    colorbar=true, new_window=false, save=false, save_fname="out.png",
 )
     ix1, ix2 = indices_of_limits(xin, xlims)
     iz1, iz2 = indices_of_limits(zin, zlims)
@@ -107,22 +107,17 @@ function plot_geometry(
     colormap = mak.to_colormap(colormap)
     colormap[1] = mak.RGBAf(0,0,0,0)
 
-    colorrange = isnothing(colorrange) ? (0,nmat) : colorrange
-
-    lmin = max(0, minimum(colorrange))
-    lmax = min(nmat, maximum(colorrange)) + 1
-    levels = lmin:lmax
-
     fig = mak.Figure(size=(950,992))
     ax = mak.Axis(
         fig[1,1]; xlabel="x ($sxu)", ylabel="z ($szu)", aspect, xautolimitmargin=(0,0),
         yautolimitmargin=(0,0),
     )
-    hm = mak.contourf!(ax, x, z, F; colormap, colorrange, levels)
+    hm = mak.contourf!(ax, x, z, F; colormap, levels=0:nmat+1)
     if colorbar
         mak.Colorbar(
             fig[2,1], hm;
-            vertical=false, flipaxis=false, width=mak.Relative(3/4), ticks=lmin:lmax,
+            vertical=false, flipaxis=false, width=mak.Relative(3/4),
+            ticks=(0.5:nmat+1, ["$n" for n=0:nmat]),
         )
     end
 
@@ -158,8 +153,8 @@ end
 function plot_geometry(
     xin, yin, zin, geometry;
     xu=nothing, yu=nothing, zu=nothing, xlims=nothing, ylims=nothing, zlims=nothing,
-    aspect=(1,1,1), colormap=nothing, colorrange=nothing, colorbar=true, new_window=false,
-    save=false, save_fname="out.png", lscene=true,
+    lscene=true, aspect=(1,1,1), colormap=nothing, colorbar=true, new_window=false,
+    save=false, save_fname="out.png",
 )
     ix1, ix2 = indices_of_limits(xin, xlims)
     iy1, iy2 = indices_of_limits(yin, ylims)
@@ -187,12 +182,9 @@ function plot_geometry(
 
     nmat = maximum(F)   # number of materials
 
-    colormap = isnothing(colormap) ? CMAP : colormap
-    colorrange = isnothing(colorrange) ? (0,nmat) : colorrange
-
-    lmin = max(0, minimum(colorrange)) + 1
-    lmax = min(nmat, maximum(colorrange)) + 1
-    levels = lmin:lmax
+    colormap= isnothing(colormap) ? CMAP : colormap
+    colormap = mak.to_colormap(colormap)
+    colormap[1] = mak.RGBAf(0,0,0,0)
 
     fig = mak.Figure(size=(950,992))
     if lscene
@@ -216,9 +208,15 @@ function plot_geometry(
     yrange = (y[1], y[end])
     zrange = (z[1], z[end])
 
-    img = mak.contour!(ax, xrange, yrange, zrange, F; colormap, colorrange, levels)
+    mak.contour!(ax, xrange, yrange, zrange, F; colormap, levels=1:nmat+1)
     if colorbar
-        mak.Colorbar(fig[1,2], img; height=mak.Relative(3/4), ticks=lmin:lmax)
+        mak.Colorbar(
+            fig[1,2];
+            limits=(0,nmat+1),
+            colormap=mak.cgrad(colormap, nmat+1, categorical=true),
+            ticks=(0.5:nmat+1, ["$n" for n=0:nmat]),
+            height=mak.Relative(3/4),
+        )
     end
 
     if save
