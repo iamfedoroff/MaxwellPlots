@@ -294,8 +294,12 @@ function plot_volume(
     )
     mak.limits!(ax, x[1], x[end], y[1], y[end], z[1], z[end])
 
+    xrange = (x[1], x[end])
+    yrange = (y[1], y[end])
+    zrange = (z[1], z[end])
+
     img = mak.volume!(
-        ax, x, y, z, F; colormap, colorrange,
+        ax, xrange, yrange, zrange, F; colormap, colorrange,
         algorithm=:absorption, absorption=4f0,
     )
 

@@ -1,11 +1,11 @@
-function plot_geometry(fname; kw_args...)
+function plot_geometry(fname; kwargs...)
     n = grid_dims(fname)
     if n == 1
-        plot_geometry_1D(fname; kw_args...)
+        plot_geometry_1D(fname; kwargs...)
     elseif n == 2
-        plot_geometry_2D(fname; kw_args...)
+        plot_geometry_2D(fname; kwargs...)
     elseif n == 3
-        plot_geometry_3D(fname; kw_args...)
+        plot_geometry_3D(fname; kwargs...)
     end
     return nothing
 end
@@ -14,7 +14,7 @@ end
 # ******************************************************************************************
 # 1D
 # ******************************************************************************************
-function plot_geometry_1D(fname; kw_args...)
+function plot_geometry_1D(fname; kwargs...)
     fp = HDF5.h5open(fname, "r")
     z = HDF5.read(fp, "z")
     geometry = HDF5.read(fp, "geometry")
@@ -66,7 +66,7 @@ end
 # ******************************************************************************************
 # 2D
 # ******************************************************************************************
-function plot_geometry_2D(fname; kw_args...)
+function plot_geometry_2D(fname; kwargs...)
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     z = HDF5.read(fp, "z")
@@ -143,7 +143,7 @@ end
 # ******************************************************************************************
 # 3D
 # ******************************************************************************************
-function plot_geometry_3D(fname; kw_args...)
+function plot_geometry_3D(fname; kwargs...)
     fp = HDF5.h5open(fname, "r")
     x = HDF5.read(fp, "x")
     y = HDF5.read(fp, "y")
@@ -211,7 +211,12 @@ function plot_geometry(
             perspectiveness=0,
         )
     end
-    img = mak.contour!(ax, x, y, z, F; colormap, colorrange, levels)
+
+    xrange = (x[1], x[end])
+    yrange = (y[1], y[end])
+    zrange = (z[1], z[end])
+
+    img = mak.contour!(ax, xrange, yrange, zrange, F; colormap, colorrange, levels)
     if colorbar
         mak.Colorbar(fig[1,2], img; height=mak.Relative(3/4), ticks=lmin:lmax)
     end

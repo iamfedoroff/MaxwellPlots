@@ -268,14 +268,18 @@ function inspect(
         title = ax.title
     end
 
+    xrange = (x[1], x[end])
+    yrange = (y[1], y[end])
+    zrange = (z[1], z[end])
     it = 1
+
     img = mak.volume!(
-        ax, x, y, z, F[:,:,:,it]; colormap, colorrange,
+        ax, xrange, yrange, zrange, F[:,:,:,it]; colormap, colorrange,
         algorithm=:absorption, absorption=4f0,
         # algorithm=:iso, isovalue=0.5*vmax,
     )
     # img = mak.contour!(
-    #     ax, x, y, z, F[:,:,:,it];
+    #     ax, xrange, yrange, zrange, F[:,:,:,it];
     #     levels=[0.1*vmin,0.1*vmax], colormap=cmap, colorrange=(vmin,vmax),
     #     alpha=1,
     # )
