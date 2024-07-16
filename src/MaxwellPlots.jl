@@ -24,9 +24,9 @@ export plot_geometry,
        plot3D_diff,
        plot3D_xsec,
        plot3D_xsec_diff,
-       plot_viewpoints,
-       plot_viewpoints_spectrum,
-       plot_viewpoints_polarization,
+       plot_monitors,
+       plot_monitors_spectrum,
+       plot_monitors_polarization,
        rough_plot
 
 include("util.jl")
@@ -36,7 +36,7 @@ include("plot_geometry.jl")
 include("plots1D.jl")
 include("plots2D.jl")
 include("plots3D.jl")
-include("viewpoints.jl")
+include("monitors.jl")
 include("rough.jl")
 
 end
