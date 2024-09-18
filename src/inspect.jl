@@ -210,7 +210,7 @@ function inspect(
     xu=nothing, yu=nothing, zu=nothing, tu=nothing, xlims=nothing, ylims=nothing,
     zlims=nothing, tlims=nothing, norm=true, colormap=nothing, colorrange=nothing,
     colorbar=true, aspect=(1,1,1), new_window=false, movie=false, movie_fname="out.mp4",
-    movie_framerate=10, lscene=true, label="",
+    movie_framerate=10, lscene=false, label="",
 )
     x, y, z, t, F = apply_limits(xin, yin, zin, tin, Fin; xlims, ylims, zlims, tlims)
 

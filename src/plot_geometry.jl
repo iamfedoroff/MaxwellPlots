@@ -153,7 +153,7 @@ end
 function plot_geometry(
     xin, yin, zin, geometry;
     xu=nothing, yu=nothing, zu=nothing, xlims=nothing, ylims=nothing, zlims=nothing,
-    lscene=true, aspect=(1,1,1), colormap=nothing, colorbar=true, new_window=false,
+    lscene=false, aspect=(1,1,1), colormap=nothing, colorbar=true, new_window=false,
     save=false, save_fname="out.png",
 )
     ix1, ix2 = indices_of_limits(xin, xlims)
