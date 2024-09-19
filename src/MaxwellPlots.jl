@@ -27,6 +27,7 @@ export plot_geometry,
        plot_monitors,
        plot_monitors_spectrum,
        plot_monitors_polarization,
+       plot_monitors_polarization_xsec,
        rough_plot
 
 include("util.jl")

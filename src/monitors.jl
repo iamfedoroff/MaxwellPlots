@@ -263,3 +263,57 @@ function plot_monitors_polarization(
 
     return nothing
 end
+
+
+function plot_monitors_polarization_xsec(
+    fname, var1, var2, monitors;
+    xu=nothing, yu=nothing, save=false, save_fname="out.png", new_window=false, scale=0.5,
+)
+    fp = HDF5.h5open(fname, "r")
+
+    x = HDF5.read(fp, "x")
+    y = HDF5.read(fp, "y")
+
+    xu = isnothing(xu) ? units(x) : xu
+    yu = isnothing(yu) ? units(y) : yu
+    sxu = units_name_space(xu)
+    syu = units_name_space(yu)
+
+    @. x = x / xu
+    @. y = y / yu
+
+    fig = mak.Figure(size=(950,992))
+    ax = mak.Axis(fig[1,1]; xlabel="x ($sxu)", ylabel="y ($syu)")
+    mak.xlims!(ax, extrema(x))
+    mak.ylims!(ax, extrema(y))
+
+    for mon in monitors
+        inds = HDF5.read(fp, "monitors/$mon/inds")
+        Ex = HDF5.read(fp, "monitors/$mon/" * string(var1))
+        Ey = HDF5.read(fp, "monitors/$mon/" * string(var2))
+
+        Ex = Ex[1,:]
+        Ey = Ey[1,:]
+
+        ix = inds[1][1][1]
+        iy = inds[1][1][2]
+        xp = x[ix]
+        yp = y[iy]
+        # @show pt, (xp, yp)
+
+        mak.scatter!(ax, xp, yp; color=:black)
+        mak.lines!(ax, scale*Ex .+ xp, scale*Ey .+ yp; color=:black, linewidth=0.5)
+    end
+
+    HDF5.close(fp)
+
+    if new_window
+        mak.display(mak.Screen(), fig)
+    else
+        mak.display(fig)
+    end
+
+    if save
+        mak.save(save_fname, fig)
+    end
+end
