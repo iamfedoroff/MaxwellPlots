@@ -11,9 +11,12 @@ function inspect3D_xsec(
     y = HDF5.read(fp, "y")
     z = HDF5.read(fp, "z")
     t = HDF5.read(fp, "fields/t")
-    if string(var) in ("Ex", "Ey", "Ez", "Hx", "Hy", "Hz", "rho")
+    if string(var) in ("Ex", "Ey", "Ez", "Hx", "Hy", "Hz")
         F = HDF5.read(fp, "fields/" * string(var))
         isnothing(colormap) ? colormap = CMAPDIV : nothing
+    elseif string(var) == "rho"
+        F = HDF5.read(fp, "fields/rho")
+        isnothing(colormap) ? colormap = CMAP : nothing
     elseif string(var) == "poynting"
         Hx = HDF5.read(fp, "fields/Hx")
         Hy = HDF5.read(fp, "fields/Hy")
