@@ -28,7 +28,10 @@ export plot_geometry,
        plot_monitors_spectrum,
        plot_monitors_polarization,
        plot_monitors_polarization_xsec,
-       rough_plot
+       rough_plot,
+       plot_spatial_spectrum,
+       inspect_spatial_spectrum,
+       plot_integrated_spatial_spectrum
 
 include("util.jl")
 include("inspect.jl")
@@ -39,5 +42,6 @@ include("plots2D.jl")
 include("plots3D.jl")
 include("monitors.jl")
 include("rough.jl")
+include("spatial_spectra.jl")
 
 end
