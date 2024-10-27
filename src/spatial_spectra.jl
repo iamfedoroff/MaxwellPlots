@@ -28,6 +28,7 @@ end
 function plot_spatial_spectrum(
     fname, var, zcut;
     gmask = true,
+    nopml = true,
     xu = nothing,
     yu = nothing,
     zu = nothing,
@@ -51,28 +52,25 @@ function plot_spatial_spectrum(
     new_window = false,
 )
     fp = HDF5.h5open(fname, "r")
-    x = HDF5.read(fp, "x")
-    y = HDF5.read(fp, "y")
-    z = HDF5.read(fp, "z")
-    if gmask
-        G = HDF5.read(fp, "geometry")
+    if nopml
+        ix1, ix2, iy1, iy2, iz1, iz2 = HDF5.read(fp, "pml")
+        x = fp["x"][ix1:ix2]
+        y = fp["y"][iy1:iy2]
+        z = fp["z"][iz1:iz2]
+        if gmask
+            G = fp["geometry"][ix1:ix2,iy1:iy2,iz1:iz2]
+        end
+        F = fp[string(var)][ix1:ix2,iy1:iy2,iz1:iz2]
+    else
+        x = HDF5.read(fp, "x")
+        y = HDF5.read(fp, "y")
+        z = HDF5.read(fp, "z")
+        if gmask
+            G = HDF5.read(fp, "geometry")
+        end
+        F = HDF5.read(fp, string(var))
     end
-    F = HDF5.read(fp, string(var))
     HDF5.close(fp)
-
-    if gmask
-        @. F = F * G
-    end
-
-    # extract a cross-section and normalize
-    iz0 = argmin(abs.(z .- zcut))
-    Fxy = F[:,:,iz0]
-    Fxy .= Fxy ./ maximum(Fxy)
-
-    # --------------------------------------------------------------------------------------
-    kx, ky = spectral_grid(x, y)
-    Sxy = spectrum(Fxy)
-    Sxy .= Sxy ./ maximum(Sxy)
 
     xu = isnothing(xu) ? units(x) : xu
     yu = isnothing(yu) ? units(y) : yu
@@ -82,6 +80,19 @@ function plot_spatial_spectrum(
     sxu = units_name_space(xu)
     syu = units_name_space(yu)
     szu = units_name_space(zu)
+
+    # --------------------------------------------------------------------------------------
+    if gmask
+        @. F = F * G
+    end
+
+    iz0 = argmin(abs.(z .- zcut))
+    Fxy = F[:,:,iz0]
+    Fxy .= Fxy ./ maximum(Fxy)   # normalize
+
+    kx, ky = spectral_grid(x, y)
+    Sxy = spectrum(Fxy)
+    Sxy .= Sxy ./ maximum(Sxy)   # normalize
 
     # --------------------------------------------------------------------------------------
     fig = mak.Figure(size=(1400,800))
@@ -124,6 +135,7 @@ function inspect_spatial_spectrum(
     fname, var;
     zcut = nothing,
     gmask = true,
+    nopml = true,
     xu = nothing,
     yu = nothing,
     zu = nothing,
@@ -147,34 +159,25 @@ function inspect_spatial_spectrum(
     new_window = false,
 )
     fp = HDF5.h5open(fname, "r")
-    x = HDF5.read(fp, "x")
-    y = HDF5.read(fp, "y")
-    z = HDF5.read(fp, "z")
-    if gmask
-        G = HDF5.read(fp, "geometry")
+    if nopml
+        ix1, ix2, iy1, iy2, iz1, iz2 = HDF5.read(fp, "pml")
+        x = fp["x"][ix1:ix2]
+        y = fp["y"][iy1:iy2]
+        z = fp["z"][iz1:iz2]
+        if gmask
+            G = fp["geometry"][ix1:ix2,iy1:iy2,iz1:iz2]
+        end
+        F = fp[string(var)][ix1:ix2,iy1:iy2,iz1:iz2]
+    else
+        x = HDF5.read(fp, "x")
+        y = HDF5.read(fp, "y")
+        z = HDF5.read(fp, "z")
+        if gmask
+            G = HDF5.read(fp, "geometry")
+        end
+        F = HDF5.read(fp, string(var))
     end
-    F = HDF5.read(fp, string(var))
     HDF5.close(fp)
-
-    if gmask
-        @. F = F * G
-    end
-
-    # normalize
-    F .= F ./ maximum(F)
-
-    # --------------------------------------------------------------------------------------
-    kx, ky = spectral_grid(x, y)
-    S1 = spectrum(F[:,:,1])
-
-    Nkx, Nky = size(S1)
-    S = zeros(size(S1)..., length(z))
-    @. S[:,:,1] = S1
-    for iz=2:length(z)
-        S[:,:,iz] .= spectrum(F[:,:,iz])
-    end
-    S .= S ./ maximum(S)
-
 
     xu = isnothing(xu) ? units(x) : xu
     yu = isnothing(yu) ? units(y) : yu
@@ -184,6 +187,23 @@ function inspect_spatial_spectrum(
     sxu = units_name_space(xu)
     syu = units_name_space(yu)
     szu = units_name_space(zu)
+
+    # --------------------------------------------------------------------------------------
+    if gmask
+        @. F = F * G
+    end
+
+    F .= F ./ maximum(F)
+
+    kx, ky = spectral_grid(x, y)
+    S1 = spectrum(F[:,:,1])
+
+    S = zeros(size(S1)..., length(z))
+    @. S[:,:,1] = S1
+    for iz=2:length(z)
+        S[:,:,iz] .= spectrum(F[:,:,iz])
+    end
+    S .= S ./ maximum(S)
 
     # --------------------------------------------------------------------------------------
     zcut = isnothing(zcut) ? z[1] + (z[end] - z[1]) / 2 : zcut
@@ -236,9 +256,9 @@ end
 function plot_integrated_spatial_spectrum(
     fname, var;
     gmask = true,
+    nopml = true,
     xu = nothing,
     yu = nothing,
-    zu = nothing,
     kxu = nothing,
     kyu = nothing,
     xmin = nothing,
@@ -259,47 +279,44 @@ function plot_integrated_spatial_spectrum(
     new_window = false,
 )
     fp = HDF5.h5open(fname, "r")
-    x = HDF5.read(fp, "x")
-    y = HDF5.read(fp, "y")
-    z = HDF5.read(fp, "z")
-    if gmask
-        G = HDF5.read(fp, "geometry")
+    if nopml
+        ix1, ix2, iy1, iy2, iz1, iz2 = HDF5.read(fp, "pml")
+        x = fp["x"][ix1:ix2]
+        y = fp["y"][iy1:iy2]
+        z = fp["z"][iz1:iz2]
+        if gmask
+            G = fp["geometry"][ix1:ix2,iy1:iy2,iz1:iz2]
+        end
+        F = fp[string(var)][ix1:ix2,iy1:iy2,iz1:iz2]
+    else
+        x = HDF5.read(fp, "x")
+        y = HDF5.read(fp, "y")
+        z = HDF5.read(fp, "z")
+        if gmask
+            G = HDF5.read(fp, "geometry")
+        end
+        F = HDF5.read(fp, string(var))
     end
-    F = HDF5.read(fp, string(var))
     HDF5.close(fp)
-
-    if gmask
-        @. F = F * G
-    end
-
-    # normalize
-    F .= F ./ maximum(F)
-
-    # --------------------------------------------------------------------------------------
-    kx, ky = spectral_grid(x, y)
-    S1 = spectrum(F[:,:,1])
-
-    Nkx, Nky = size(S1)
-    S = zeros(size(S1)..., length(z))
-    @. S[:,:,1] = S1
-    for iz=2:length(z)
-        S[:,:,iz] .= spectrum(F[:,:,iz])
-    end
-    S .= S ./ maximum(S)
 
     xu = isnothing(xu) ? units(x) : xu
     yu = isnothing(yu) ? units(y) : yu
-    zu = isnothing(zu) ? units(z) : zu
     kxu = isnothing(kxu) ? 1/xu : kxu
     kyu = isnothing(kyu) ? 1/yu : kyu
     sxu = units_name_space(xu)
     syu = units_name_space(yu)
-    szu = units_name_space(zu)
+
+    # --------------------------------------------------------------------------------------
+    if gmask
+        @. F = F * G
+    end
 
     F = dropdims(sum(F; dims=3); dims=3)
-    S = dropdims(sum(S; dims=3); dims=3)
-    F .= F ./ maximum(F)
-    S .= S ./ maximum(S)
+    F .= F ./ maximum(F)   # normalize
+
+    kx, ky = spectral_grid(x, y)
+    S = spectrum(F)
+    S .= S ./ maximum(S)   # normalize
 
     # --------------------------------------------------------------------------------------
     fig = mak.Figure(size=(1400,800))
